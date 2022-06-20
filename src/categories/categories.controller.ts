@@ -8,6 +8,7 @@ import { Category } from './interfaces/categories.inteface';
 @Controller('/api/categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
+
   @UseGuards(JwtAuthGuard)
   @Post()
   @HttpCode(201)

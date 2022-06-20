@@ -5,6 +5,7 @@ import { AddCategoryDto } from './dto/add-category.dto';
 import { User } from '../users/interfaces/users.interface';
 import { Category } from './interfaces/categories.inteface';
 import { HttpException, HttpStatus } from '@nestjs/common';
+import { Users } from '../users/entities/users.entity';
 
 export class CategoriesService {
   constructor(
@@ -21,10 +22,13 @@ export class CategoriesService {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
+    const savedUser = new Users();
+    savedUser.id = user.id;
+
     const category: Category = {
       name: addCategoryDto.name,
       isAdditional: addCategoryDto.isAdditional ?? false,
-      user,
+      user: savedUser,
     };
 
     const newCategory = await this.ordersRepository.save(category);
