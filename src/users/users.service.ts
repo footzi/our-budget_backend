@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { User } from './interfaces/users.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Users } from './entities/users.entity';
@@ -34,10 +34,14 @@ export class UsersService {
    * Создание нового пользователя
    */
   async create(createUserDTO: CreateUserDto): Promise<User> {
+    if (!createUserDTO.login || !createUserDTO.password || !createUserDTO.firstName) {
+      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
+    }
+
     const findedUser = await this.findByLogin(createUserDTO.login);
 
     if (findedUser) {
-      throw new Error('Пользователь с данным логином уже существует');
+      throw new HttpException('Пользователь с данным логином уже существует', HttpStatus.BAD_REQUEST);
     }
 
     const hashedPassword = createUserDTO.password ? await Crypt.hash(createUserDTO.password) : '';

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, UseGuards, Request, Body, Delete, Put, HttpCode } from '@nestjs/common';
+import { Controller, Post, UseGuards, Request, Body, Delete, Put, HttpCode } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
@@ -7,6 +7,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { successHandler } from '../utils/successHandler';
 import { User } from '../users/interfaces/users.interface';
 import { Tokens } from './interfaces/auth.interfaces';
+import { SignUpDto } from './dto/signup.dto';
 
 @Controller()
 export class AuthController {
@@ -22,18 +23,16 @@ export class AuthController {
     }
   }
 
-  @UseGuards(LocalAuthGuard)
   @HttpCode(201)
   @Post('/api/auth/signup')
-  async signup(@Request() req): Promise<{ user: User; tokens: Tokens }> {
+  async signup(@Body() signUpDto: SignUpDto): Promise<{ user: User; tokens: Tokens }> {
     try {
-      return this.authService.signUp(req.user);
+      return this.authService.signUp(signUpDto);
     } catch (error) {
       errorHandler(error);
     }
   }
 
-  // JWTREFRESHGUARD @todo должна быть
   @UseGuards(AuthGuard('jwt-refreshtoken'))
   @Put('/api/auth/refresh')
   async refresh(@Request() req): Promise<{ user: User; tokens: Tokens }> {
