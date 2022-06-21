@@ -9,6 +9,8 @@ import { Categories } from '../categories/entities/categories.entity';
 import { Users } from '../users/entities/users.entity';
 import { AddExpenseFactDto } from './dto/add-expense-fact-dto';
 import { ExpensesFact } from './entities/expenses-fact.entity';
+import { UpdateExpensePlanDto } from './dto/update-expense-plan.dto';
+import { UpdateExpenseFactDto } from './dto/update-expense-fact.dto';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const dayjs = require('dayjs');
@@ -25,7 +27,10 @@ export class ExpensesService {
   /**
    * Создает расход
    */
-  private createExpense(input: AddExpensePlanDto | AddExpenseFactDto, userId: number) {
+  private createExpense(
+    input: AddExpensePlanDto | AddExpenseFactDto | UpdateExpensePlanDto | UpdateExpenseFactDto,
+    userId: number
+  ) {
     // @todo вынести в какой-нибудь валидатор
     if (!input.value || !input.date) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
@@ -61,6 +66,30 @@ export class ExpensesService {
   }
 
   /**
+   * Изменяет плановый расход
+   */
+  async changePlan(updateExpensePlan: UpdateExpensePlanDto, user: User): Promise<void> {
+    if (!updateExpensePlan.id) {
+      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
+    }
+
+    const expense = this.createExpense(updateExpensePlan, user.id);
+
+    await this.expensesPlanRepository.update(updateExpensePlan.id, expense);
+  }
+
+  /**
+   * Удаляет плановый расход
+   */
+  async deletePlan(id: number): Promise<void> {
+    if (!id) {
+      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
+    }
+
+    await this.expensesPlanRepository.delete(id);
+  }
+
+  /**
    * Добавляет фактический расход
    */
   async addFact(addExpenseFact: AddExpenseFactDto, user: User): Promise<Expense> {
@@ -73,6 +102,30 @@ export class ExpensesService {
   }
 
   /**
+   * Изменяет фактический расход
+   */
+  async changeFact(updateExpenseFact: UpdateExpenseFactDto, user: User): Promise<void> {
+    if (!updateExpenseFact.id) {
+      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
+    }
+
+    const expense = this.createExpense(updateExpenseFact, user.id);
+
+    await this.expensesFactRepository.update(updateExpenseFact.id, expense);
+  }
+
+  /**
+   * Удаляет фактический расход
+   */
+  async deleteFact(id: number): Promise<void> {
+    if (!id) {
+      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
+    }
+
+    await this.expensesFactRepository.delete(id);
+  }
+
+  /**
    * Получает спискок планируемых трат по дате
    */
   getAllPlansByPeriod(start: string, end: string): Promise<Expense[]> {
@@ -81,8 +134,11 @@ export class ExpensesService {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
-    return this.expensesPlanRepository.findBy({
-      date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+    return this.expensesPlanRepository.find({
+      where: {
+        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+      },
+      relations: ['category'],
     });
   }
 
@@ -95,8 +151,11 @@ export class ExpensesService {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
-    return this.expensesFactRepository.findBy({
-      date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+    return this.expensesFactRepository.find({
+      where: {
+        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+      },
+      relations: ['category'],
     });
   }
 }
