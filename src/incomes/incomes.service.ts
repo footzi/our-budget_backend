@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { IncomesPlan } from './entities/incomes-plan.entity';
@@ -15,6 +15,7 @@ import { UpdateIncomeFactDto } from './dto/update-income-fact.dto';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const dayjs = require('dayjs');
 
+@Injectable()
 export class IncomesService {
   constructor(
     @InjectRepository(IncomesPlan)

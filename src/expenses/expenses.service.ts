@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { ExpensesPlan } from './entities/expenses-plan.entity';
@@ -15,6 +15,7 @@ import { UpdateExpenseFactDto } from './dto/update-expense-fact.dto';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const dayjs = require('dayjs');
 
+@Injectable()
 export class ExpensesService {
   constructor(
     @InjectRepository(ExpensesPlan)
@@ -133,8 +134,6 @@ export class ExpensesService {
     if (!start || !end) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
-
-    this.getPlansSumByPeriod(start, end);
 
     return this.expensesPlanRepository.find({
       where: {

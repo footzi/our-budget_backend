@@ -15,6 +15,7 @@ import { ExpensesFact } from './expenses/entities/expenses-fact.entity';
 import { IncomesPlan } from './incomes/entities/incomes-plan.entity';
 import { IncomesFact } from './incomes/entities/incomes-fact.entity';
 import { IncomesModule } from './incomes/incomes.module';
+import { BalanceModule } from './balance/balance.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { IncomesModule } from './incomes/incomes.module';
     CategoriesModule,
     ExpensesModule,
     IncomesModule,
+    BalanceModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
