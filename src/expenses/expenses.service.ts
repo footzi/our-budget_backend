@@ -134,12 +134,50 @@ export class ExpensesService {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
+    this.getPlansSumByPeriod(start, end);
+
     return this.expensesPlanRepository.find({
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
       },
       relations: ['category'],
     });
+  }
+
+  /**
+   * Получает cумму планируемых доходов по дате
+   */
+  async getPlansSumByPeriod(start: string, end: string) {
+    if (!start || !end) {
+      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
+    }
+
+    const items = await this.expensesPlanRepository.find({
+      where: {
+        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+      },
+      select: ['value'],
+    });
+
+    return items.reduce((acc, item) => acc + item.value, 0);
+  }
+
+  /**
+   * Получает cумму фактических доходов по дате
+   */
+  async getFactsSumByPeriod(start: string, end: string) {
+    if (!start || !end) {
+      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
+    }
+
+    const items = await this.expensesFactRepository.find({
+      where: {
+        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+      },
+      select: ['value'],
+    });
+
+    return items.reduce((acc, item) => acc + item.value, 0);
   }
 
   /**

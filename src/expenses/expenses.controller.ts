@@ -9,6 +9,7 @@ import { UpdateExpensePlanDto } from './dto/update-expense-plan.dto';
 import { successHandler } from '../utils/successHandler';
 import { SuccessHandler } from '../utils/successHandler/interfaces';
 import { UpdateExpenseFactDto } from './dto/update-expense-fact.dto';
+import { GetAllExpensesOutputDto } from './dto/get-all-expenses-output-dto';
 
 @Controller('/api/expenses')
 export class ExpensesController {
@@ -121,15 +122,18 @@ export class ExpensesController {
   @UseGuards(JwtAuthGuard)
   @Get('/getAll')
   @HttpCode(200)
-  async getAllExpenses(
-    @Query('start') start: string,
-    @Query('end') end: string
-  ): Promise<{ expenses: { fact: Expense[]; plan: Expense[] } }> {
+  async getAllExpenses(@Query('start') start: string, @Query('end') end: string): Promise<GetAllExpensesOutputDto> {
     try {
       return {
         expenses: {
-          plan: await this.expensesService.getAllPlansByPeriod(start, end),
-          fact: await this.expensesService.getAllFactsByPeriod(start, end),
+          plan: {
+            list: await this.expensesService.getAllPlansByPeriod(start, end),
+            sum: await this.expensesService.getPlansSumByPeriod(start, end),
+          },
+          fact: {
+            list: await this.expensesService.getAllFactsByPeriod(start, end),
+            sum: await this.expensesService.getFactsSumByPeriod(start, end),
+          },
         },
       };
     } catch (error) {

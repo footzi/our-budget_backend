@@ -11,18 +11,17 @@ import { CategoriesModule } from './categories/categories.module';
 import { Categories } from './categories/entities/categories.entity';
 import { ExpensesPlan } from './expenses/entities/expenses-plan.entity';
 import { ExpensesModule } from './expenses/expenses.module';
-import { IncomesController } from './incomes/incomes.controller';
-import { IncomesService } from './incomes/incomes.service';
-import { IncomesModule } from './incomes/incomes.module';
 import { ExpensesFact } from './expenses/entities/expenses-fact.entity';
+import { IncomesPlan } from './incomes/entities/incomes-plan.entity';
+import { IncomesFact } from './incomes/entities/incomes-fact.entity';
+import { IncomesModule } from './incomes/incomes.module';
 
 @Module({
   imports: [
     AuthModule,
     CategoriesModule,
     ExpensesModule,
-    // IncomesModule,
-
+    IncomesModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -31,12 +30,12 @@ import { ExpensesFact } from './expenses/entities/expenses-fact.entity';
     TypeOrmModule.forRootAsync({
       useFactory: (config: ConfigService) => ({
         ...config.get('database'),
-        entities: [Auths, Users, Categories, ExpensesPlan, ExpensesFact],
+        entities: [Auths, Users, Categories, ExpensesPlan, ExpensesFact, IncomesPlan, IncomesFact],
       }),
       inject: [ConfigService],
     }),
   ],
-  controllers: [AppController, IncomesController],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
