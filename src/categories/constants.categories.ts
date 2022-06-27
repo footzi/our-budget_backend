@@ -1,0 +1,4 @@
+export enum CATEGORIES_TYPES {
+  INCOME = 'INCOME',
+  EXPENSE = 'EXPENSE',
+}
