@@ -33,7 +33,7 @@ export class IncomesService {
     userId: number
   ) {
     // @todo вынести в какой-нибудь валидатор
-    if (!input.value || !input.date) {
+    if (!input.value || !input.date || !input.categoryId) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 

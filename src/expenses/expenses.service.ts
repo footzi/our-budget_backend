@@ -33,7 +33,7 @@ export class ExpensesService {
     userId: number
   ) {
     // @todo вынести в какой-нибудь валидатор
-    if (!input.value || !input.date) {
+    if (!input.value || !input.date || !input.categoryId) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
@@ -127,7 +127,7 @@ export class ExpensesService {
   }
 
   /**
-   * Получает спискок планируемых трат по дате
+   * Получает список планируемых трат по дате
    */
   getAllPlansByPeriod(start: string, end: string): Promise<Expense[]> {
     // @todo вынести в какой-нибудь валидатор

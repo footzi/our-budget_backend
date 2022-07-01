@@ -16,6 +16,10 @@ import { IncomesPlan } from './incomes/entities/incomes-plan.entity';
 import { IncomesFact } from './incomes/entities/incomes-fact.entity';
 import { IncomesModule } from './incomes/incomes.module';
 import { BalanceModule } from './balance/balance.module';
+import { SavingsPlan } from './savings/entities/savings-plan.entity';
+import { SavingsFact } from './savings/entities/savings-fact.entity';
+import { SavingsGoal } from './savings/entities/savings-goal.entity';
+import { SavingsModule } from './savings/savings.module';
 
 @Module({
   imports: [
@@ -24,6 +28,7 @@ import { BalanceModule } from './balance/balance.module';
     ExpensesModule,
     IncomesModule,
     BalanceModule,
+    SavingsModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -32,7 +37,18 @@ import { BalanceModule } from './balance/balance.module';
     TypeOrmModule.forRootAsync({
       useFactory: (config: ConfigService) => ({
         ...config.get('database'),
-        entities: [Auths, Users, Categories, ExpensesPlan, ExpensesFact, IncomesPlan, IncomesFact],
+        entities: [
+          Auths,
+          Users,
+          Categories,
+          ExpensesPlan,
+          ExpensesFact,
+          IncomesPlan,
+          IncomesFact,
+          SavingsPlan,
+          SavingsFact,
+          SavingsGoal,
+        ],
       }),
       inject: [ConfigService],
     }),

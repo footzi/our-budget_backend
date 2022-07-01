@@ -1,0 +1,4 @@
+export enum SAVING_ACTION_TYPE {
+  INCOME = 'INCOME',
+  EXPENSE = 'EXPENSE',
+}
