@@ -53,10 +53,9 @@ export class UsersService {
     };
 
     const newUser = await this.usersRepository.save(user);
+    delete newUser.password;
 
-    const { password, ...rest } = newUser;
-
-    return rest;
+    return newUser;
   }
 
   // /**

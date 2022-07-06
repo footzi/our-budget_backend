@@ -1,11 +1,8 @@
-import { Controller, Get, Body, HttpCode, Param, UseGuards, SetMetadata, Post } from '@nestjs/common';
+import { Controller, Get, HttpCode, Param, UseGuards } from '@nestjs/common';
 import { errorHandler } from '../utils/errorHandler';
 import { User } from './interfaces/users.interface';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CreateUserDto } from './dto/create-user.dto';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { USER_ROLES } from './users.constants';
 
 @Controller('/api/users')
 export class UsersController {
@@ -17,6 +14,8 @@ export class UsersController {
   async getById(@Param('id') id: number): Promise<{ user: User }> {
     try {
       const user = await this.usersService.findById(id);
+      delete user.password;
+      delete user.roles;
 
       if (user) {
         return {

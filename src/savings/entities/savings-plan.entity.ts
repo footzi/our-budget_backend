@@ -1,7 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
 import { Users } from '../../users/entities/users.entity';
 import { Saving } from '../interfaces/saving.interfaces';
 import { SavingsGoal } from './savings-goal.entity';
+import { SAVING_ACTION_TYPE } from '../savings.constants';
 
 @Entity()
 export class SavingsPlan implements Saving {
@@ -24,4 +25,14 @@ export class SavingsPlan implements Saving {
   @ManyToOne(() => SavingsGoal)
   @JoinColumn()
   goal: SavingsGoal;
+
+  @Column({
+    type: 'enum',
+    enum: SAVING_ACTION_TYPE,
+    default: SAVING_ACTION_TYPE.INCOME,
+  })
+  actionType: SAVING_ACTION_TYPE;
+
+  @CreateDateColumn()
+  createdAt: Date;
 }

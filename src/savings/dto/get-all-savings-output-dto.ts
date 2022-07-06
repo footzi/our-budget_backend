@@ -1,8 +1,14 @@
 import { Saving } from '../interfaces/saving.interfaces';
 
 export interface GetAllSavingsOutputDto {
-  saving: {
-    plan: Saving[];
-    fact: Saving[];
+  savings: {
+    plan: {
+      list: Saving[];
+      sum: number;
+    };
+    fact: {
+      list: Saving[];
+      sum: number;
+    };
   };
 }

@@ -8,4 +8,5 @@ export interface Income {
   value: number;
   comment: string;
   date: string;
+  createdAt?: Date;
 }

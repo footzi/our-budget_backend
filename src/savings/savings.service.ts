@@ -45,6 +45,7 @@ export class SavingsService {
       name: input.name,
       description: input.description ?? '',
       finishValue: input.finishValue ?? null,
+      value: input.value ?? 0,
       user,
     };
   }
@@ -63,22 +64,14 @@ export class SavingsService {
     const user = new Users();
     user.id = userId;
 
-    const saving = {
+    return {
       value: Number(input.value),
       date: input.date,
       comment: input.comment ?? '',
+      actionType: input.actionType,
       goal,
       user,
     };
-
-    if ('actionType' in input) {
-      return {
-        ...saving,
-        actionType: input.actionType,
-      };
-    } else {
-      return saving;
-    }
   }
 
   /**
@@ -166,9 +159,14 @@ export class SavingsService {
    * Возвращает весь список копилок
    */
   async getAllGoals(user: User): Promise<SavingGoal[]> {
-    return this.savingsGoalRepository.findBy({
-      user: {
-        id: user.id,
+    return this.savingsGoalRepository.find({
+      where: {
+        user: {
+          id: user.id,
+        },
+      },
+      order: {
+        createdAt: 'ASC',
       },
     });
   }
@@ -269,6 +267,9 @@ export class SavingsService {
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
       },
+      order: {
+        createdAt: 'ASC',
+      },
       relations: ['goal'],
     });
   }
@@ -285,45 +286,46 @@ export class SavingsService {
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
       },
+      order: {
+        createdAt: 'ASC',
+      },
       relations: ['goal'],
     });
   }
 
-  // /**
-  //  * @deprecated
-  //  * Получает cумму доходов по дате
-  //  */
-  // async getPlansSumByPeriod(start: string, end: string) {
-  //   if (!start || !end) {
-  //     throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-  //   }
-  //
-  //   const items = await this.savingsPlanRepository.find({
-  //     where: {
-  //       date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
-  //     },
-  //     select: ['value'],
-  //   });
-  //
-  //   return items.reduce((acc, item) => acc + item.value, 0);
-  // }
+  /**
+   * Получает cумму доходов по дате
+   */
+  async getPlansSumByPeriod(start: string, end: string) {
+    if (!start || !end) {
+      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
+    }
 
-  // /**
-  //  * @deprecated
-  //  * Получает cумму доходов по дате
-  //  */
-  // async getFactsSumByPeriod(start: string, end: string) {
-  //   if (!start || !end) {
-  //     throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-  //   }
-  //
-  //   const items = await this.savingsFactRepository.find({
-  //     where: {
-  //       date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
-  //     },
-  //     select: ['value'],
-  //   });
-  //
-  //   return items.reduce((acc, item) => acc + item.value, 0);
-  // }
+    const items = await this.savingsPlanRepository.find({
+      where: {
+        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+      },
+      select: ['value'],
+    });
+
+    return items.reduce((acc, item) => acc + item.value, 0);
+  }
+
+  /**
+   * Получает cумму доходов по дате
+   */
+  async getFactsSumByPeriod(start: string, end: string) {
+    if (!start || !end) {
+      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
+    }
+
+    const items = await this.savingsFactRepository.find({
+      where: {
+        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+      },
+      select: ['value'],
+    });
+
+    return items.reduce((acc, item) => acc + item.value, 0);
+  }
 }

@@ -8,4 +8,5 @@ export interface Expense {
   value: number;
   comment: string;
   date: string;
+  createdAt?: Date;
 }

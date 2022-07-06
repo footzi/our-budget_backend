@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
 import { SavingGoal } from '../interfaces/saving.interfaces';
 import { Users } from '../../users/entities/users.entity';
 
@@ -22,4 +22,7 @@ export class SavingsGoal implements SavingGoal {
   @ManyToOne(() => Users)
   @JoinColumn()
   user: Users;
+
+  @CreateDateColumn()
+  createdAt: Date;
 }

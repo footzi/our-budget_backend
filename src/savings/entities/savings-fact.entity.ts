@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
 import { Users } from '../../users/entities/users.entity';
 import { Saving } from '../interfaces/saving.interfaces';
 import { SavingsGoal } from './savings-goal.entity';
@@ -32,4 +32,7 @@ export class SavingsFact implements Saving {
     default: SAVING_ACTION_TYPE.INCOME,
   })
   actionType: SAVING_ACTION_TYPE;
+
+  @CreateDateColumn()
+  createdAt: Date;
 }

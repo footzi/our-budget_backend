@@ -20,6 +20,7 @@ import { SavingsPlan } from './savings/entities/savings-plan.entity';
 import { SavingsFact } from './savings/entities/savings-fact.entity';
 import { SavingsGoal } from './savings/entities/savings-goal.entity';
 import { SavingsModule } from './savings/savings.module';
+import { Balances } from './balance/enitites/balance.entity';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { SavingsModule } from './savings/savings.module';
           SavingsPlan,
           SavingsFact,
           SavingsGoal,
+          Balances,
         ],
       }),
       inject: [ConfigService],

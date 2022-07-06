@@ -151,9 +151,15 @@ export class SavingsController {
   async getAllSavings(@Query('start') start: string, @Query('end') end: string): Promise<GetAllSavingsOutputDto> {
     try {
       return {
-        saving: {
-          plan: await this.savingsService.getAllPlansByPeriod(start, end),
-          fact: await this.savingsService.getAllFactsByPeriod(start, end),
+        savings: {
+          plan: {
+            list: await this.savingsService.getAllPlansByPeriod(start, end),
+            sum: await this.savingsService.getPlansSumByPeriod(start, end),
+          },
+          fact: {
+            list: await this.savingsService.getAllFactsByPeriod(start, end),
+            sum: await this.savingsService.getFactsSumByPeriod(start, end),
+          },
         },
       };
     } catch (error) {

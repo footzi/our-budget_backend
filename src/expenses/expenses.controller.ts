@@ -83,9 +83,9 @@ export class ExpensesController {
   @UseGuards(JwtAuthGuard)
   @Delete('/fact')
   @HttpCode(200)
-  async removeFact(@Body() { id }: { id: number }): Promise<SuccessHandler> {
+  async removeFact(@Body() { id }: { id: number }, @Request() req): Promise<SuccessHandler> {
     try {
-      await this.expensesService.deleteFact(id);
+      await this.expensesService.deleteFact(id, req.user);
 
       return successHandler();
     } catch (error) {

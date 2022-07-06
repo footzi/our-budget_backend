@@ -31,8 +31,8 @@ export class AuthService {
     const user = await this.usersService.findByLogin(login);
 
     if (user && user.password && (await Crypt.compare(pass, user.password))) {
-      const { password, ...result } = user;
-      return result;
+      delete user.password;
+      return user;
     }
     return null;
   }
@@ -46,8 +46,8 @@ export class AuthService {
     const user = await this.usersService.findById(userId);
 
     if (user) {
-      const { password, ...result } = user;
-      return result;
+      delete user.password;
+      return user;
     }
     return null;
   }

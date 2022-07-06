@@ -11,6 +11,8 @@ import { AddExpenseFactDto } from './dto/add-expense-fact-dto';
 import { ExpensesFact } from './entities/expenses-fact.entity';
 import { UpdateExpensePlanDto } from './dto/update-expense-plan.dto';
 import { UpdateExpenseFactDto } from './dto/update-expense-fact.dto';
+import { Income } from '../incomes/interfaces/income.interface';
+import { BalanceService } from '../balance/balance.service';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const dayjs = require('dayjs');
@@ -22,7 +24,9 @@ export class ExpensesService {
     private expensesPlanRepository: Repository<Expense>,
 
     @InjectRepository(ExpensesFact)
-    private expensesFactRepository: Repository<Expense>
+    private expensesFactRepository: Repository<Expense>,
+
+    private balanceService: BalanceService
   ) {}
 
   /**
@@ -52,6 +56,30 @@ export class ExpensesService {
     };
 
     return expense;
+  }
+
+  /**
+   * Изменяет баланс при добавлении факта
+   */
+  private async changeBalanceAdd(userId: number, fact: Income) {
+    const value = -fact.value;
+    await this.balanceService.changeBalance(userId, value);
+  }
+
+  /**
+   * Изменяет баланс при обновлении факта
+   */
+  private async changeBalanceUpdate(userId: number, fact: Income, previousFact: Income) {
+    const value = previousFact.value - Number(fact.value);
+    await this.balanceService.changeBalance(userId, value);
+  }
+
+  /**
+   * Изменяет баланс при удалении факта
+   */
+  private async changeBalanceDelete(userId: number, previousItem: Income) {
+    const value = previousItem.value;
+    await this.balanceService.changeBalance(userId, value);
   }
 
   /**
@@ -99,6 +127,8 @@ export class ExpensesService {
     const newExpense = await this.expensesFactRepository.save(expense);
     delete newExpense.user;
 
+    await this.changeBalanceAdd(user.id, expense);
+
     return newExpense;
   }
 
@@ -110,20 +140,30 @@ export class ExpensesService {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
+    const previousFact = await this.expensesFactRepository.findOne({
+      where: { id: updateExpenseFact.id },
+    });
+
     const expense = this.createExpense(updateExpenseFact, user.id);
 
     await this.expensesFactRepository.update(updateExpenseFact.id, expense);
+    await this.changeBalanceUpdate(user.id, expense, previousFact);
   }
 
   /**
    * Удаляет фактический расход
    */
-  async deleteFact(id: number): Promise<void> {
+  async deleteFact(id: number, user: User): Promise<void> {
     if (!id) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
+    const previousItem = await this.expensesFactRepository.findOne({
+      where: { id },
+    });
+
     await this.expensesFactRepository.delete(id);
+    await this.changeBalanceDelete(user.id, previousItem);
   }
 
   /**
@@ -138,6 +178,9 @@ export class ExpensesService {
     return this.expensesPlanRepository.find({
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+      },
+      order: {
+        createdAt: 'ASC',
       },
       relations: ['category'],
     });
@@ -191,6 +234,9 @@ export class ExpensesService {
     return this.expensesFactRepository.find({
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+      },
+      order: {
+        createdAt: 'ASC',
       },
       relations: ['category'],
     });

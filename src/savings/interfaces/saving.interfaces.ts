@@ -8,6 +8,7 @@ export interface SavingGoal {
   value?: number | null;
   finishValue?: number | null;
   user: User;
+  createdAt?: Date;
 }
 
 export interface Saving {
@@ -18,4 +19,5 @@ export interface Saving {
   value: number;
   comment: string;
   date: string;
+  createdAt?: Date;
 }

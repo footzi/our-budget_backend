@@ -3,4 +3,5 @@ export interface UpdateSavingGoalDto {
   name: string;
   description?: string;
   finishValue?: number;
+  value?: number;
 }

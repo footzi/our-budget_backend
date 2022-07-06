@@ -11,6 +11,7 @@ import { AddIncomePlanDto } from './dto/add-income-dto-plan';
 import { AddIncomeFactDto } from './dto/add-income-dto-fact';
 import { UpdateIncomePlanDto } from './dto/update-income-plan.dto';
 import { UpdateIncomeFactDto } from './dto/update-income-fact.dto';
+import { BalanceService } from '../balance/balance.service';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const dayjs = require('dayjs');
@@ -22,7 +23,9 @@ export class IncomesService {
     private incomePlanRepository: Repository<Income>,
 
     @InjectRepository(IncomesFact)
-    private incomeFactRepository: Repository<Income>
+    private incomeFactRepository: Repository<Income>,
+
+    private balanceService: BalanceService
   ) {}
 
   /**
@@ -52,6 +55,30 @@ export class IncomesService {
     };
 
     return income;
+  }
+
+  /**
+   * Изменяет баланс при добавлении факта
+   */
+  private async changeBalanceAdd(userId: number, fact: Income) {
+    const value = fact.value;
+    await this.balanceService.changeBalance(userId, value);
+  }
+
+  /**
+   * Изменяет баланс при обновлении факта
+   */
+  private async changeBalanceUpdate(userId: number, fact: Income, previousFact: Income) {
+    const value = Number(fact.value) - previousFact.value;
+    await this.balanceService.changeBalance(userId, value);
+  }
+
+  /**
+   * Изменяет баланс при удалении факта
+   */
+  private async changeBalanceDelete(userId: number, previousItem: Income) {
+    const value = -previousItem.value;
+    await this.balanceService.changeBalance(userId, value);
   }
 
   /**
@@ -99,6 +126,8 @@ export class IncomesService {
     const newIncome = await this.incomeFactRepository.save(income);
     delete newIncome.user;
 
+    await this.changeBalanceAdd(user.id, income);
+
     return newIncome;
   }
 
@@ -110,20 +139,30 @@ export class IncomesService {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
+    const previousFact = await this.incomeFactRepository.findOne({
+      where: { id: updateIncomeFact.id },
+    });
+
     const income = this.createIncome(updateIncomeFact, user.id);
 
     await this.incomeFactRepository.update(updateIncomeFact.id, income);
+    await this.changeBalanceUpdate(user.id, income, previousFact);
   }
 
   /**
    * Удаляет фактический расход
    */
-  async deleteFact(id: number): Promise<void> {
+  async deleteFact(id: number, user: User): Promise<void> {
     if (!id) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
+    const previousItem = await this.incomeFactRepository.findOne({
+      where: { id },
+    });
+
     await this.incomeFactRepository.delete(id);
+    await this.changeBalanceDelete(user.id, previousItem);
   }
 
   /**
@@ -138,6 +177,9 @@ export class IncomesService {
     return this.incomePlanRepository.find({
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+      },
+      order: {
+        createdAt: 'ASC',
       },
       relations: ['category'],
     });
@@ -191,6 +233,9 @@ export class IncomesService {
     return this.incomeFactRepository.find({
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+      },
+      order: {
+        createdAt: 'ASC',
       },
       relations: ['category'],
     });

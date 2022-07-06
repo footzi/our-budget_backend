@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
 import { Users } from '../../users/entities/users.entity';
 import { Expense } from '../interfaces/expense.interfaces';
 import { Categories } from '../../categories/entities/categories.entity';
@@ -24,4 +24,7 @@ export class ExpensesFact implements Expense {
   @ManyToOne(() => Categories)
   @JoinColumn()
   category: Categories;
+
+  @CreateDateColumn()
+  createdAt: Date;
 }
