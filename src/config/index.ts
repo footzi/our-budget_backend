@@ -1,6 +1,6 @@
 export default () => {
   return {
-    port: parseInt(process.env.PORT, 10) || 8888,
+    port: parseInt(process.env.PORT, 10),
     useCors: !!process.env.USE_CORS,
     jwt: {
       secret: process.env.JWT_SECRET,

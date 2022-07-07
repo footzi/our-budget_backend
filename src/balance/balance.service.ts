@@ -21,6 +21,10 @@ export class BalanceService {
       where: { user: { id: user.id } },
     });
 
+    if (!balance) {
+      return 0;
+    }
+
     return balance.common;
   }
 
