@@ -9,7 +9,7 @@
 ## Prod
 - docker-compose up postgres - Запуск БД
 - yarn build - Cборка приложения
-- yarn start - Cтарт приложения
+- yarn start:pm2 - Cтарт приложения
 
 ## Другие команды
 - docker-compose up -d
