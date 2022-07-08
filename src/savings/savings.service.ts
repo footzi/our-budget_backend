@@ -14,6 +14,7 @@ import { AddSavingFactDto } from './dto/add-saving-fact-dto';
 import { UpdateSavingFactDto } from './dto/update-saving-fact-dto';
 import { SavingsPlan } from './entities/savings-plan.entity';
 import { SAVING_ACTION_TYPE } from './savings.constants';
+import { BalanceService } from '../balance/balance.service';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const dayjs = require('dayjs');
@@ -27,8 +28,42 @@ export class SavingsService {
     private savingsFactRepository: Repository<Saving>,
 
     @InjectRepository(SavingsPlan)
-    private savingsPlanRepository: Repository<Saving>
+    private savingsPlanRepository: Repository<Saving>,
+
+    private balanceService: BalanceService
   ) {}
+
+  /**
+   * Изменяет баланс при добавлении в копилку
+   */
+  private async changeBalanceAdd(userId: number, item: Saving) {
+    const { value, actionType } = item;
+
+    const result = actionType === SAVING_ACTION_TYPE.INCOME ? -value : value;
+    await this.balanceService.changeBalance(userId, result);
+  }
+
+  /**
+   * Изменяет баланс при обновлении копилки
+   */
+  private async changeBalanceUpdate(userId: number, item: Saving, previousItem: Saving) {
+    const { actionType, value } = item;
+
+    const diff = previousItem.value - Number(value);
+    const result = actionType === SAVING_ACTION_TYPE.INCOME ? diff : -diff;
+
+    await this.balanceService.changeBalance(userId, result);
+  }
+
+  /**
+   * Изменяет баланс при удалении копилки
+   */
+  private async changeBalanceDelete(userId: number, previousItem: Saving) {
+    const { actionType, value } = previousItem;
+
+    const result = actionType === SAVING_ACTION_TYPE.INCOME ? value : -value;
+    await this.balanceService.changeBalance(userId, result);
+  }
 
   /**
    * Создает цель
@@ -217,6 +252,7 @@ export class SavingsService {
     delete item.user;
 
     await this.changeAddValueGoal(addSavingFact.goalId, item);
+    await this.changeBalanceAdd(user.id, item);
 
     return item;
   }
@@ -234,14 +270,19 @@ export class SavingsService {
       where: { id: updateSavingFact.id },
     });
 
+    if (item.actionType !== previousItem.actionType) {
+      throw new HttpException('Не возможно изменить типа факта в копилке', HttpStatus.BAD_REQUEST);
+    }
+
     await this.savingsFactRepository.update(updateSavingFact.id, item);
     await this.changeUpdateValueGoal(updateSavingFact.goalId, item, previousItem);
+    await this.changeBalanceUpdate(user.id, item, previousItem);
   }
 
   /**
    * Удаляет факт
    */
-  async deleteFact(id: number) {
+  async deleteFact(id: number, user: User) {
     if (!id) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
@@ -253,6 +294,7 @@ export class SavingsService {
 
     await this.savingsFactRepository.delete(id);
     await this.changeDeleteValueGoal(previousItem);
+    await this.changeBalanceDelete(user.id, previousItem);
   }
 
   /**
@@ -305,10 +347,17 @@ export class SavingsService {
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
       },
-      select: ['value'],
     });
 
-    return items.reduce((acc, item) => acc + item.value, 0);
+    return items.reduce((acc, item) => {
+      const { value, actionType } = item;
+
+      if (actionType === SAVING_ACTION_TYPE.INCOME) {
+        return acc + value;
+      } else {
+        return acc - value;
+      }
+    }, 0);
   }
 
   /**
@@ -323,9 +372,16 @@ export class SavingsService {
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
       },
-      select: ['value'],
     });
 
-    return items.reduce((acc, item) => acc + item.value, 0);
+    return items.reduce((acc, item) => {
+      const { value, actionType } = item;
+
+      if (actionType === SAVING_ACTION_TYPE.INCOME) {
+        return acc + value;
+      } else {
+        return acc - value;
+      }
+    }, 0);
   }
 }

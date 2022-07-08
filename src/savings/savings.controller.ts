@@ -135,9 +135,9 @@ export class SavingsController {
   @UseGuards(JwtAuthGuard)
   @Delete('/fact')
   @HttpCode(200)
-  async deleteFacr(@Body() { id }: { id: number }): Promise<SuccessHandler> {
+  async deleteFacr(@Body() { id }: { id: number }, @Request() req): Promise<SuccessHandler> {
     try {
-      await this.savingsService.deleteFact(id);
+      await this.savingsService.deleteFact(id, req.user);
 
       return successHandler();
     } catch (error) {
