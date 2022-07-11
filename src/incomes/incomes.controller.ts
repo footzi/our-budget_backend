@@ -96,10 +96,14 @@ export class IncomesController {
   @UseGuards(JwtAuthGuard)
   @Get('/plan/getAll')
   @HttpCode(200)
-  async getAllPlansByPeriod(@Body('start') start: string, @Body('end') end: string): Promise<{ incomes: Income[] }> {
+  async getAllPlansByPeriod(
+    @Body('start') start: string,
+    @Body('end') end: string,
+    @Request() req
+  ): Promise<{ incomes: Income[] }> {
     try {
       return {
-        incomes: await this.incomesService.getAllPlansByPeriod(start, end),
+        incomes: await this.incomesService.getAllPlansByPeriod(start, end, req.user.id),
       };
     } catch (error) {
       errorHandler(error);
@@ -109,10 +113,14 @@ export class IncomesController {
   @UseGuards(JwtAuthGuard)
   @Get('/fact/getAll')
   @HttpCode(200)
-  async getAllFactsByPeriod(@Body('start') start: string, @Body('end') end: string): Promise<{ incomes: Income[] }> {
+  async getAllFactsByPeriod(
+    @Body('start') start: string,
+    @Body('end') end: string,
+    @Request() req
+  ): Promise<{ incomes: Income[] }> {
     try {
       return {
-        incomes: await this.incomesService.getAllFactsByPeriod(start, end),
+        incomes: await this.incomesService.getAllFactsByPeriod(start, end, req.user.id),
       };
     } catch (error) {
       errorHandler(error);
@@ -122,17 +130,21 @@ export class IncomesController {
   @UseGuards(JwtAuthGuard)
   @Get('/getAll')
   @HttpCode(200)
-  async getAllIncomes(@Query('start') start: string, @Query('end') end: string): Promise<GetAllIncomesOutputDto> {
+  async getAllIncomes(
+    @Query('start') start: string,
+    @Query('end') end: string,
+    @Request() req
+  ): Promise<GetAllIncomesOutputDto> {
     try {
       return {
         incomes: {
           plan: {
-            list: await this.incomesService.getAllPlansByPeriod(start, end),
-            sum: await this.incomesService.getPlansSumByPeriod(start, end),
+            list: await this.incomesService.getAllPlansByPeriod(start, end, req.user.id),
+            sum: await this.incomesService.getPlansSumByPeriod(start, end, req.user.id),
           },
           fact: {
-            list: await this.incomesService.getAllFactsByPeriod(start, end),
-            sum: await this.incomesService.getFactsSumByPeriod(start, end),
+            list: await this.incomesService.getAllFactsByPeriod(start, end, req.user.id),
+            sum: await this.incomesService.getFactsSumByPeriod(start, end, req.user.id),
           },
         },
       };

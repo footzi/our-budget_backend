@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpCode, Request, UseGuards } from '@nestjs/common';
 import { errorHandler } from '../utils/errorHandler';
 import { User } from './interfaces/users.interface';
 import { UsersService } from './users.service';
@@ -11,47 +11,13 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get()
   @HttpCode(200)
-  async getById(@Param('id') id: number): Promise<{ user: User }> {
+  async getById(@Request() req): Promise<{ user: User }> {
     try {
-      const user = await this.usersService.findById(id);
-      delete user.password;
-      delete user.roles;
-
-      if (user) {
-        return {
-          user,
-        };
-      } else {
-        throw new Error('Пользователь не найден');
-      }
+      return {
+        user: await this.usersService.getById(req.user.id),
+      };
     } catch (error) {
       errorHandler(error);
     }
   }
-
-  // @Post()
-  // @HttpCode(201)
-  // async create(@Body() createUserDTO: CreateUserDto): Promise<{ user: User }> {
-  //   try {
-  //     return {
-  //       user: await this.usersService.create(createUserDTO),
-  //     };
-  //   } catch (error) {
-  //     errorHandler(error);
-  //   }
-  // }
-
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @SetMetadata('roles', [USER_ROLES.ADMIN])
-  // @Get('allClients')
-  // @HttpCode(200)
-  // async getAllActiveClients(): Promise<{ clients: Client[] }> {
-  //   try {
-  //     return {
-  //       clients: await this.usersService.getAllClients(),
-  //     };
-  //   } catch (error) {
-  //     errorHandler(error);
-  //   }
-  // }
 }

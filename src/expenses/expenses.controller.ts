@@ -96,10 +96,14 @@ export class ExpensesController {
   @UseGuards(JwtAuthGuard)
   @Get('/plan/getAll')
   @HttpCode(200)
-  async getAllPlansByPeriod(@Body('start') start: string, @Body('end') end: string): Promise<{ expenses: Expense[] }> {
+  async getAllPlansByPeriod(
+    @Body('start') start: string,
+    @Body('end') end: string,
+    @Request() req
+  ): Promise<{ expenses: Expense[] }> {
     try {
       return {
-        expenses: await this.expensesService.getAllPlansByPeriod(start, end),
+        expenses: await this.expensesService.getAllPlansByPeriod(start, end, req.user.id),
       };
     } catch (error) {
       errorHandler(error);
@@ -109,10 +113,14 @@ export class ExpensesController {
   @UseGuards(JwtAuthGuard)
   @Get('/fact/getAll')
   @HttpCode(200)
-  async getAllFactsByPeriod(@Body('start') start: string, @Body('end') end: string): Promise<{ expenses: Expense[] }> {
+  async getAllFactsByPeriod(
+    @Body('start') start: string,
+    @Body('end') end: string,
+    @Request() req
+  ): Promise<{ expenses: Expense[] }> {
     try {
       return {
-        expenses: await this.expensesService.getAllFactsByPeriod(start, end),
+        expenses: await this.expensesService.getAllFactsByPeriod(start, end, req.user.id),
       };
     } catch (error) {
       errorHandler(error);
@@ -122,17 +130,21 @@ export class ExpensesController {
   @UseGuards(JwtAuthGuard)
   @Get('/getAll')
   @HttpCode(200)
-  async getAllExpenses(@Query('start') start: string, @Query('end') end: string): Promise<GetAllExpensesOutputDto> {
+  async getAllExpenses(
+    @Query('start') start: string,
+    @Query('end') end: string,
+    @Request() req
+  ): Promise<GetAllExpensesOutputDto> {
     try {
       return {
         expenses: {
           plan: {
-            list: await this.expensesService.getAllPlansByPeriod(start, end),
-            sum: await this.expensesService.getPlansSumByPeriod(start, end),
+            list: await this.expensesService.getAllPlansByPeriod(start, end, req.user.id),
+            sum: await this.expensesService.getPlansSumByPeriod(start, end, req.user.id),
           },
           fact: {
-            list: await this.expensesService.getAllFactsByPeriod(start, end),
-            sum: await this.expensesService.getFactsSumByPeriod(start, end),
+            list: await this.expensesService.getAllFactsByPeriod(start, end, req.user.id),
+            sum: await this.expensesService.getFactsSumByPeriod(start, end, req.user.id),
           },
         },
       };

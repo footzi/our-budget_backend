@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -43,10 +43,9 @@ export class AuthService {
    * @param {number} userId - id пользователя
    */
   async getUser(userId: number): Promise<User | null> {
-    const user = await this.usersService.findById(userId);
+    const user = await this.usersService.getById(userId);
 
     if (user) {
-      delete user.password;
       return user;
     }
     return null;
@@ -80,6 +79,14 @@ export class AuthService {
   }
 
   async signUp(signUpDto: SignUpDto): Promise<{ user: User; tokens: Tokens } | null> {
+    if (!signUpDto.login || !signUpDto.password || !signUpDto.password2 || !signUpDto.firstName) {
+      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
+    }
+
+    if (signUpDto.password !== signUpDto.password2) {
+      throw new HttpException('Пароли не совпадают', HttpStatus.BAD_REQUEST);
+    }
+
     const user = await this.usersService.create(signUpDto);
 
     if (user) {

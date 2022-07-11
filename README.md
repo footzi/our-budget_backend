@@ -1,7 +1,7 @@
 # Запуск
 
 ## Dev
-- docker-compose up postgres - Запуск БД
+- docker-compose up postgres -d - Запуск БД
 - yarn start:dev - Запуск приложения
 - docker-compose up pgadmin - PG admin откроется на http://localhost:5050/
 - docker-compose stop pgadmin - остановить сервис
@@ -10,6 +10,8 @@
 - docker-compose up postgres - Запуск БД
 - yarn build - Cборка приложения
 - yarn start:pm2 - Cтарт приложения
+- yarn stop:pm2 - Остановка приложения
+- pm2 list - список процессов
 
 ## Другие команды
 - docker-compose up -d

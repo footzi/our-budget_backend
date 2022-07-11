@@ -14,7 +14,7 @@ export class BalanceService {
   ) {}
 
   /**
-   * Возвращает общий баланс (разница между доходами и расходами)
+   * Возвращает общий баланс
    */
   async getCommon(user: User): Promise<number> {
     const balance = await this.balanceRepository.findOne({
@@ -28,6 +28,9 @@ export class BalanceService {
     return balance.common;
   }
 
+  /**
+   * Изменяет баланс
+   */
   public async changeBalance(userId: number, value: number) {
     const current = await this.balanceRepository.findOne({
       where: { user: { id: userId } },

@@ -23,14 +23,6 @@ export class UsersService {
   }
 
   /**
-   * Поиск пользователя по id
-   * @param {number} id - логин
-   */
-  async findById(id: number): Promise<User | undefined> {
-    return this.usersRepository.findOneBy({ id });
-  }
-
-  /**
    * Создание нового пользователя
    */
   async create(createUserDTO: CreateUserDto): Promise<User> {
@@ -58,28 +50,24 @@ export class UsersService {
     return newUser;
   }
 
-  // /**
-  //  * Создает нового клиента
-  //  * @param {Client} client - данные нового клиента
-  //  */
-  // async createNewClient(client: Client): Promise<Client> {
-  //   const newUser = await this.create({ ...client, roles: JSON.stringify([USER_ROLES.CLIENT]) });
-  //
-  //   return UserUtils.convertToClient(newUser);
-  // }
+  /**
+   * Возвращает пользователя
+   * @param id
+   */
+  async getById(id: number): Promise<User> {
+    if (!id) {
+      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
+    }
 
-  // /**
-  //  * Получение списка всех клиентов
-  //  *
-  //  */
-  // async getAllClients() {
-  //   const users = await this.usersRepository.find({
-  //     where: {
-  //       roles: Equal(`{${USER_ROLES.CLIENT}}`),
-  //     },
-  //     relations: ['pets'],
-  //   });
-  //
-  //   return users.map((user) => UserUtils.convertToClient(user));
-  // }
+    const user = await this.usersRepository.findOneBy({ id });
+
+    if (!user) {
+      throw new Error('Пользователь не найден');
+    }
+
+    delete user.password;
+    delete user.roles;
+
+    return user;
+  }
 }

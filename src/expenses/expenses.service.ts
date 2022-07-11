@@ -169,7 +169,7 @@ export class ExpensesService {
   /**
    * Получает список планируемых трат по дате
    */
-  getAllPlansByPeriod(start: string, end: string): Promise<Expense[]> {
+  getAllPlansByPeriod(start: string, end: string, userId: number): Promise<Expense[]> {
     // @todo вынести в какой-нибудь валидатор
     if (!start || !end) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
@@ -177,6 +177,9 @@ export class ExpensesService {
 
     return this.expensesPlanRepository.find({
       where: {
+        user: {
+          id: userId,
+        },
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
       },
       order: {
@@ -189,14 +192,17 @@ export class ExpensesService {
   /**
    * Получает cумму планируемых доходов по дате
    */
-  async getPlansSumByPeriod(start: string, end: string) {
-    if (!start || !end) {
+  async getPlansSumByPeriod(start: string, end: string, userId: number) {
+    if (!start || !end || !userId) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
     const items = await this.expensesPlanRepository.find({
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+        user: {
+          id: userId,
+        },
       },
       select: ['value'],
     });
@@ -207,14 +213,17 @@ export class ExpensesService {
   /**
    * Получает cумму фактических доходов по дате
    */
-  async getFactsSumByPeriod(start: string, end: string) {
-    if (!start || !end) {
+  async getFactsSumByPeriod(start: string, end: string, userId) {
+    if (!start || !end || !userId) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
     const items = await this.expensesFactRepository.find({
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+        user: {
+          id: userId,
+        },
       },
       select: ['value'],
     });
@@ -225,15 +234,18 @@ export class ExpensesService {
   /**
    * Получает спискок фактических трат по дате
    */
-  getAllFactsByPeriod(start: string, end: string): Promise<Expense[]> {
+  getAllFactsByPeriod(start: string, end: string, userId: number): Promise<Expense[]> {
     // @todo вынести в какой-нибудь валидатор
-    if (!start || !end) {
+    if (!start || !end || !userId) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
     return this.expensesFactRepository.find({
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+        user: {
+          id: userId,
+        },
       },
       order: {
         createdAt: 'ASC',

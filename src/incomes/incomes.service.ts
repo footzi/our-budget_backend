@@ -168,15 +168,18 @@ export class IncomesService {
   /**
    * Получает список планируемых доходов по дате
    */
-  getAllPlansByPeriod(start: string, end: string): Promise<Income[]> {
+  getAllPlansByPeriod(start: string, end: string, userId): Promise<Income[]> {
     // @todo вынести в какой-нибудь валидатор
-    if (!start || !end) {
+    if (!start || !end || !userId) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
     return this.incomePlanRepository.find({
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+        user: {
+          id: userId,
+        },
       },
       order: {
         createdAt: 'ASC',
@@ -188,14 +191,17 @@ export class IncomesService {
   /**
    * Получает cумму планируемых доходов по дате
    */
-  async getPlansSumByPeriod(start: string, end: string) {
-    if (!start || !end) {
+  async getPlansSumByPeriod(start: string, end: string, userId: number) {
+    if (!start || !end || !userId) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
     const items = await this.incomePlanRepository.find({
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+        user: {
+          id: userId,
+        },
       },
       select: ['value'],
     });
@@ -206,14 +212,17 @@ export class IncomesService {
   /**
    * Получает cумму фактических доходов по дате
    */
-  async getFactsSumByPeriod(start: string, end: string) {
-    if (!start || !end) {
+  async getFactsSumByPeriod(start: string, end: string, userId: number) {
+    if (!start || !end || !userId) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
     const items = await this.incomeFactRepository.find({
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+        user: {
+          id: userId,
+        },
       },
       select: ['value'],
     });
@@ -224,15 +233,18 @@ export class IncomesService {
   /**
    * Получает спискок фактических доходов по дате
    */
-  getAllFactsByPeriod(start: string, end: string): Promise<Income[]> {
+  getAllFactsByPeriod(start: string, end: string, userId: number): Promise<Income[]> {
     // @todo вынести в какой-нибудь валидатор
-    if (!start || !end) {
+    if (!start || !end || !userId) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
     return this.incomeFactRepository.find({
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+        user: {
+          id: userId,
+        },
       },
       order: {
         createdAt: 'ASC',

@@ -300,14 +300,17 @@ export class SavingsService {
   /**
    * Получает список плана по дате
    */
-  getAllPlansByPeriod(start: string, end: string): Promise<Saving[]> {
-    if (!start || !end) {
+  getAllPlansByPeriod(start: string, end: string, userId: number): Promise<Saving[]> {
+    if (!start || !end || !userId) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
     return this.savingsPlanRepository.find({
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+        user: {
+          id: userId,
+        },
       },
       order: {
         createdAt: 'ASC',
@@ -319,14 +322,17 @@ export class SavingsService {
   /**
    * Получает список факта по дате
    */
-  getAllFactsByPeriod(start: string, end: string): Promise<Saving[]> {
-    if (!start || !end) {
+  getAllFactsByPeriod(start: string, end: string, userId: number): Promise<Saving[]> {
+    if (!start || !end || !userId) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
     return this.savingsFactRepository.find({
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+        user: {
+          id: userId,
+        },
       },
       order: {
         createdAt: 'ASC',
@@ -338,14 +344,17 @@ export class SavingsService {
   /**
    * Получает cумму доходов по дате
    */
-  async getPlansSumByPeriod(start: string, end: string) {
-    if (!start || !end) {
+  async getPlansSumByPeriod(start: string, end: string, userId: number) {
+    if (!start || !end || !userId) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
     const items = await this.savingsPlanRepository.find({
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+        user: {
+          id: userId,
+        },
       },
     });
 
@@ -363,14 +372,17 @@ export class SavingsService {
   /**
    * Получает cумму доходов по дате
    */
-  async getFactsSumByPeriod(start: string, end: string) {
-    if (!start || !end) {
+  async getFactsSumByPeriod(start: string, end: string, userId: number) {
+    if (!start || !end || !userId) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
     const items = await this.savingsFactRepository.find({
       where: {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+        user: {
+          id: userId,
+        },
       },
     });
 

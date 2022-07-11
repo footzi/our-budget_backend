@@ -148,17 +148,21 @@ export class SavingsController {
   @UseGuards(JwtAuthGuard)
   @Get('/getAll')
   @HttpCode(200)
-  async getAllSavings(@Query('start') start: string, @Query('end') end: string): Promise<GetAllSavingsOutputDto> {
+  async getAllSavings(
+    @Query('start') start: string,
+    @Query('end') end: string,
+    @Request() req
+  ): Promise<GetAllSavingsOutputDto> {
     try {
       return {
         savings: {
           plan: {
-            list: await this.savingsService.getAllPlansByPeriod(start, end),
-            sum: await this.savingsService.getPlansSumByPeriod(start, end),
+            list: await this.savingsService.getAllPlansByPeriod(start, end, req.user.id),
+            sum: await this.savingsService.getPlansSumByPeriod(start, end, req.user.id),
           },
           fact: {
-            list: await this.savingsService.getAllFactsByPeriod(start, end),
-            sum: await this.savingsService.getFactsSumByPeriod(start, end),
+            list: await this.savingsService.getAllFactsByPeriod(start, end, req.user.id),
+            sum: await this.savingsService.getFactsSumByPeriod(start, end, req.user.id),
           },
         },
       };
