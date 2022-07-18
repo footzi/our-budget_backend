@@ -7,6 +7,6 @@ export interface Expense {
   category: Category;
   value: number;
   comment: string;
-  date: string;
+  date: Date;
   createdAt?: Date;
 }

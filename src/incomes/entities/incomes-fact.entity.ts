@@ -14,8 +14,8 @@ export class IncomesFact implements Income {
   @Column('varchar', { length: 1000 })
   comment: string;
 
-  @Column('date')
-  date: string;
+  @Column('timestamp')
+  date: Date;
 
   @ManyToOne(() => Users)
   @JoinColumn()

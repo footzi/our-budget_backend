@@ -313,7 +313,7 @@ export class SavingsService {
         },
       },
       order: {
-        createdAt: 'ASC',
+        date: 'DESC',
       },
       relations: ['goal'],
     });
@@ -335,7 +335,7 @@ export class SavingsService {
         },
       },
       order: {
-        createdAt: 'ASC',
+        date: 'DESC',
       },
       relations: ['goal'],
     });

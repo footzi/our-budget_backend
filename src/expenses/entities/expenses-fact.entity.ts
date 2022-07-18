@@ -14,8 +14,8 @@ export class ExpensesFact implements Expense {
   @Column('varchar', { length: 1000 })
   comment: string;
 
-  @Column('date')
-  date: string;
+  @Column('timestamp')
+  date: Date;
 
   @ManyToOne(() => Users)
   @JoinColumn()

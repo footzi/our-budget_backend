@@ -183,7 +183,7 @@ export class ExpensesService {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
       },
       order: {
-        createdAt: 'ASC',
+        date: 'DESC',
       },
       relations: ['category'],
     });
@@ -248,7 +248,7 @@ export class ExpensesService {
         },
       },
       order: {
-        createdAt: 'ASC',
+        date: 'DESC',
       },
       relations: ['category'],
     });

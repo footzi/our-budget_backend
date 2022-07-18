@@ -182,7 +182,7 @@ export class IncomesService {
         },
       },
       order: {
-        createdAt: 'ASC',
+        date: 'DESC',
       },
       relations: ['category'],
     });
@@ -247,7 +247,7 @@ export class IncomesService {
         },
       },
       order: {
-        createdAt: 'ASC',
+        date: 'DESC',
       },
       relations: ['category'],
     });

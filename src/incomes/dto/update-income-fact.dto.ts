@@ -2,6 +2,6 @@ export interface UpdateIncomeFactDto {
   id: number;
   categoryId?: number;
   value?: number;
-  date?: string;
+  date?: Date;
   comment?: string;
 }

@@ -1,6 +1,6 @@
 export interface AddExpensePlanDto {
   categoryId: number;
   value: number;
-  date: string;
+  date: Date;
   comment?: string;
 }
