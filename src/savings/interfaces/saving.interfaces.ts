@@ -18,6 +18,6 @@ export interface Saving {
   actionType?: SAVING_ACTION_TYPE;
   value: number;
   comment: string;
-  date: string;
+  date: Date;
   createdAt?: Date;
 }

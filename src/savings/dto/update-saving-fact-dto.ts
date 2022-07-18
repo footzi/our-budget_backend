@@ -4,7 +4,7 @@ export interface UpdateSavingFactDto {
   id: number;
   goalId: number;
   value: number;
-  date: string;
+  date: Date;
   comment?: string;
   actionType: SAVING_ACTION_TYPE;
 }
