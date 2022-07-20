@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Crypt } from '../utils/crypt';
 import { USER_ROLES } from './users.constants';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -69,5 +70,12 @@ export class UsersService {
     delete user.roles;
 
     return user;
+  }
+
+  /**
+   * Обновляет данные пользователя
+   */
+  async update(updateUserDto: UpdateUserDto, user: User): Promise<void> {
+    await this.usersRepository.update(user.id, updateUserDto);
   }
 }

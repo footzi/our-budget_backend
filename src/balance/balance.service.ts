@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Balances } from './enitites/balance.entity';
 import { Users } from '../users/entities/users.entity';
 import { Balance } from './interfaces/balance.interface';
 import { User } from '../users/interfaces/users.interface';
+import { UpdateBalanceDto } from './dto/update-balance-dto';
 
 @Injectable()
 export class BalanceService {
@@ -52,5 +53,16 @@ export class BalanceService {
 
       await this.balanceRepository.save(balance);
     }
+  }
+
+  /**
+   * Обновляет баланс
+   */
+  async update(updateBalanceDto: UpdateBalanceDto, user: User): Promise<void> {
+    if (!updateBalanceDto.common) {
+      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
+    }
+
+    await this.balanceRepository.update({ user: { id: user.id } }, updateBalanceDto);
   }
 }
