@@ -26,15 +26,21 @@ export class AuthService {
    *
    * @param {string} login - логин
    * @param {string} pass - пароль
+   * @throws {Error}
    */
-  async validateUser(login: string, pass: string): Promise<User | null> {
+  async validateUser(login: string, pass: string): Promise<User> {
     const user = await this.usersService.findByLogin(login);
 
-    if (user && user.password && (await Crypt.compare(pass, user.password))) {
+    if (!user) {
+      throw new HttpException('Данного пользователя не существует', HttpStatus.BAD_REQUEST);
+    }
+
+    if (user.password && (await Crypt.compare(pass, user.password))) {
       delete user.password;
       return user;
+    } else {
+      throw new HttpException('Неверный пароль', HttpStatus.BAD_REQUEST);
     }
-    return null;
   }
 
   /**
