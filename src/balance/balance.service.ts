@@ -63,6 +63,21 @@ export class BalanceService {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
+    const current = await this.balanceRepository.findOne({
+      where: { user: { id: user.id } },
+    });
+
+    if (!current) {
+      const balance = new Balances();
+      const newUser = new Users();
+
+      newUser.id = user.id;
+      balance.user = newUser;
+      balance.common = updateBalanceDto.common;
+
+      await this.balanceRepository.save(balance);
+    }
+
     await this.balanceRepository.update({ user: { id: user.id } }, updateBalanceDto);
   }
 }
