@@ -1,12 +1,13 @@
-import { Categories } from './entities/categories.entity';
+import { HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AddCategoryDto } from './dto/add-category.dto';
-import { User } from '../users/interfaces/users.interface';
-import { Category } from './interfaces/categories.inteface';
-import { HttpException, HttpStatus } from '@nestjs/common';
+
 import { Users } from '../users/entities/users.entity';
+import { User } from '../users/interfaces/users.interface';
+import { AddCategoryDto } from './dto/add-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { Categories } from './entities/categories.entity';
+import { Category } from './interfaces/categories.interface';
 
 export class CategoriesService {
   constructor(

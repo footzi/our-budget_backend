@@ -1,7 +1,7 @@
 import { User } from '../../users/interfaces/users.interface';
 import { SAVING_ACTION_TYPE } from '../savings.constants';
 
-export interface SavingGoal {
+export class SavingGoal {
   id?: number;
   name: string;
   description?: string;
@@ -11,7 +11,7 @@ export interface SavingGoal {
   createdAt?: Date;
 }
 
-export interface Saving {
+export class Saving {
   id?: number;
   user: User;
   goal: SavingGoal;

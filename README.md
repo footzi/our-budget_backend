@@ -5,6 +5,7 @@
 - yarn start:dev - Запуск приложения
 - docker-compose up pgadmin - PG admin откроется на http://localhost:5050/
 - docker-compose stop pgadmin - остановить сервис
+- swagger - http://localhost:8888/swagger/
 
 ## Prod
 - docker-compose up postgres - Запуск БД

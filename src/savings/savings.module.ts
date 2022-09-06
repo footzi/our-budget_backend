@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SavingsController } from './savings.controller';
-import { SavingsService } from './savings.service';
-import { SavingsPlan } from './entities/savings-plan.entity';
+
+import { BalanceModule } from '../balance/balance.module';
 import { SavingsFact } from './entities/savings-fact.entity';
 import { SavingsGoal } from './entities/savings-goal.entity';
-import { BalanceModule } from '../balance/balance.module';
+import { SavingsPlan } from './entities/savings-plan.entity';
+import { SavingsController } from './savings.controller';
+import { SavingsService } from './savings.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([SavingsPlan, SavingsFact, SavingsGoal]), BalanceModule],

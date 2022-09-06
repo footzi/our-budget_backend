@@ -1,4 +1,4 @@
-export interface UpdateExpensePlanDto {
+export class UpdateExpensePlanDto {
   id: number;
   categoryId?: number;
   value?: number;

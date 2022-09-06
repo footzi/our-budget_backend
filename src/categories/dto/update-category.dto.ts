@@ -1,6 +1,6 @@
 import { CATEGORIES_TYPES } from '../constants.categories';
 
-export interface UpdateCategoryDto {
+export class UpdateCategoryDto {
   id: number;
   name: string;
   type: CATEGORIES_TYPES;

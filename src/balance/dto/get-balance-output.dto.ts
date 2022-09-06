@@ -1,4 +1,4 @@
-export interface GetBalanceOutputDto {
+export class GetBalanceOutputDto {
   balance: {
     common: number;
   };

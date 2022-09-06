@@ -1,13 +1,14 @@
-import { Controller, Post, UseGuards, Request, Body, Delete, Put, HttpCode } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './guards/local-auth.guard';
+import { Body, Controller, Delete, HttpCode, Post, Put, Request, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { errorHandler } from '../utils/errorHandler';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { successHandler } from '../utils/successHandler';
+
 import { User } from '../users/interfaces/users.interface';
-import { Tokens } from './interfaces/auth.interfaces';
+import { errorHandler } from '../utils/errorHandler';
+import { successHandler } from '../utils/successHandler';
+import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/signup.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { LocalAuthGuard } from './guards/local-auth.guard';
+import { Tokens } from './interfaces/auth.interfaces';
 
 @Controller()
 export class AuthController {

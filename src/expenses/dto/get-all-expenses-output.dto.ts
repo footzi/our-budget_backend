@@ -1,6 +1,6 @@
-import { Expense } from '../interfaces/expense.interfaces';
+import { Expense } from '../interfaces/expense.interface';
 
-export interface GetAllExpensesOutputDto {
+export class GetAllExpensesOutputDto {
   expenses: {
     plan: {
       list: Expense[];

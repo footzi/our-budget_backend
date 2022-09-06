@@ -1,12 +1,13 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { User } from './interfaces/users.interface';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Users } from './entities/users.entity';
 import { Repository } from 'typeorm';
-import { CreateUserDto } from './dto/create-user.dto';
+
 import { Crypt } from '../utils/crypt';
-import { USER_ROLES } from './users.constants';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Users } from './entities/users.entity';
+import { User } from './interfaces/users.interface';
+import { USER_ROLES } from './users.constants';
 
 @Injectable()
 export class UsersService {

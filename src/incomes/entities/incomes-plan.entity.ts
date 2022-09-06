@@ -1,6 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
-import { Users } from '../../users/entities/users.entity';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+
 import { Categories } from '../../categories/entities/categories.entity';
+import { Users } from '../../users/entities/users.entity';
 import { Income } from '../interfaces/income.interface';
 
 @Entity()

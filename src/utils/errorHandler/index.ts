@@ -1,4 +1,5 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
+
 import { ErrorHandlerProps } from './interfaces';
 
 export const errorHandler = (error: ErrorHandlerProps) => {

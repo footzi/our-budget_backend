@@ -1,15 +1,16 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { UsersService } from '../users/users.service';
+import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { User } from '../users/interfaces/users.interface';
-import { Auths } from './entitites/auth.entity';
-import { Auth, Tokens } from './interfaces/auth.interfaces';
+import { UsersService } from '../users/users.service';
 import { Crypt } from '../utils/crypt';
 import { GenerateRandom } from '../utils/generateRandom';
 import { SignUpDto } from './dto/signup.dto';
+import { Auths } from './entitites/auth.entity';
+import { Auth, Tokens } from './interfaces/auth.interfaces';
 
 @Injectable()
 export class AuthService {

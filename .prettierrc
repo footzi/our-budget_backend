@@ -8,5 +8,10 @@
   "jsxBracketSameLine": true,
   "printWidth": 120,
   "quoteProps": "consistent",
-  "pugTabWidth": 2
+  "pugTabWidth": 2,
+  "importOrder": ["^[./]"],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "importOrderParserPlugins" : ["typescript", "classProperties", "decorators-legacy"]
 }
+

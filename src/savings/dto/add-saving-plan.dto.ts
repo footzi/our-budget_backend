@@ -1,6 +1,6 @@
 import { SAVING_ACTION_TYPE } from '../savings.constants';
 
-export interface AddSavingFactDto {
+export class AddSavingPlanDto {
   goalId: number;
   value: number;
   date: Date;

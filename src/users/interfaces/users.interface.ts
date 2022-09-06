@@ -1,6 +1,6 @@
 import { USER_ROLES } from '../users.constants';
 
-export interface User {
+export class User {
   id?: number;
   login: string;
   firstName: string;

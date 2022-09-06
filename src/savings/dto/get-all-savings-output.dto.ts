@@ -1,6 +1,6 @@
-import { Saving } from '../interfaces/saving.interfaces';
+import { Saving } from '../interfaces/saving.interface';
 
-export interface GetAllSavingsOutputDto {
+export class GetAllSavingsOutputDto {
   savings: {
     plan: {
       list: Saving[];
