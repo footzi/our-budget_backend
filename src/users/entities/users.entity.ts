@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+
 import { User } from '../interfaces/users.interface';
 import { USER_ROLES } from '../users.constants';
 

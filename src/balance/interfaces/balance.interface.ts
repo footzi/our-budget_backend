@@ -1,6 +1,6 @@
 import { User } from '../../users/interfaces/users.interface';
 
-export interface Balance {
+export class Balance {
   id?: number;
   user: User;
   common: number;

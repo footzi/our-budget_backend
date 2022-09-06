@@ -1,6 +1,6 @@
 import { CATEGORIES_TYPES } from '../constants.categories';
 
-export interface AddCategoryDto {
+export class AddCategoryDto {
   name: string;
   type: CATEGORIES_TYPES;
   startDate?: string;

@@ -1,11 +1,12 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Balances } from './enitites/balance.entity';
+
 import { Users } from '../users/entities/users.entity';
-import { Balance } from './interfaces/balance.interface';
 import { User } from '../users/interfaces/users.interface';
-import { UpdateBalanceDto } from './dto/update-balance-dto';
+import { UpdateBalanceDto } from './dto/update-balance.dto';
+import { Balances } from './enitites/balance.entity';
+import { Balance } from './interfaces/balance.interface';
 
 @Injectable()
 export class BalanceService {

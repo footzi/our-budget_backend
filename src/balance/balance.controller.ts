@@ -1,11 +1,14 @@
-import { BalanceService } from './balance.service';
 import { Body, Controller, Get, HttpCode, Put, Request, UseGuards } from '@nestjs/common';
+import { ApiBadRequestResponse, ApiOkResponse } from '@nestjs/swagger';
+
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { errorHandler } from '../utils/errorHandler';
-import { GetBalanceOutputDto } from './dto/get-balance-output-dto';
-import { SuccessHandler } from '../utils/successHandler/interfaces';
+import { ErrorHandler } from '../utils/errorHandler/interfaces';
 import { successHandler } from '../utils/successHandler';
-import { UpdateBalanceDto } from './dto/update-balance-dto';
+import { SuccessHandler } from '../utils/successHandler/interfaces';
+import { BalanceService } from './balance.service';
+import { GetBalanceOutputDto } from './dto/get-balance-output.dto';
+import { UpdateBalanceDto } from './dto/update-balance.dto';
 
 @Controller('/api/balance')
 export class BalanceController {
@@ -14,6 +17,8 @@ export class BalanceController {
   @UseGuards(JwtAuthGuard)
   @Get('/')
   @HttpCode(200)
+  @ApiOkResponse({ type: GetBalanceOutputDto })
+  @ApiBadRequestResponse({ type: ErrorHandler })
   async getBalance(@Request() req): Promise<GetBalanceOutputDto> {
     try {
       return {
@@ -29,6 +34,8 @@ export class BalanceController {
   @UseGuards(JwtAuthGuard)
   @Put()
   @HttpCode(200)
+  @ApiOkResponse({ type: SuccessHandler })
+  @ApiBadRequestResponse({ type: ErrorHandler })
   async updateUBalance(@Body() updateBalanceDto: UpdateBalanceDto, @Request() req): Promise<SuccessHandler> {
     try {
       await this.balanceService.update(updateBalanceDto, req.user);

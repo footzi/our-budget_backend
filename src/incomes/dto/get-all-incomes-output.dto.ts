@@ -1,6 +1,6 @@
 import { Income } from '../interfaces/income.interface';
 
-export interface GetAllIncomesOutputDto {
+export class GetAllIncomesOutputDto {
   incomes: {
     plan: {
       list: Income[];

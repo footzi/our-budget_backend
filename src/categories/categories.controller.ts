@@ -1,12 +1,18 @@
-import { Body, Controller, HttpCode, Post, UseGuards, Request, Get, Put, Delete } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Post, Put, Request, UseGuards } from '@nestjs/common';
+import { ApiBadRequestResponse, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
+
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { errorHandler } from '../utils/errorHandler';
-import { AddCategoryDto } from './dto/add-category.dto';
-import { CategoriesService } from './categories.service';
-import { Category } from './interfaces/categories.inteface';
-import { UpdateCategoryDto } from './dto/update-category.dto';
+import { ErrorHandler } from '../utils/errorHandler/interfaces';
 import { successHandler } from '../utils/successHandler';
 import { SuccessHandler } from '../utils/successHandler/interfaces';
+import { CategoriesService } from './categories.service';
+import { AddCategoryOutputDto } from './dto/add-category-output.dto';
+import { AddCategoryDto } from './dto/add-category.dto';
+import { AllCategoriesOutputDto } from './dto/all-categories-output.dto';
+import { DeleteCategoryDto } from './dto/delete-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
+import { Category } from './interfaces/categories.interface';
 
 @Controller('/api/categories')
 export class CategoriesController {
@@ -15,6 +21,8 @@ export class CategoriesController {
   @UseGuards(JwtAuthGuard)
   @Post()
   @HttpCode(201)
+  @ApiCreatedResponse({ type: AddCategoryOutputDto })
+  @ApiBadRequestResponse({ type: ErrorHandler })
   async add(@Body() addCategoryDto: AddCategoryDto, @Request() req): Promise<{ category: Category }> {
     try {
       return {
@@ -28,6 +36,8 @@ export class CategoriesController {
   @UseGuards(JwtAuthGuard)
   @Put()
   @HttpCode(200)
+  @ApiOkResponse({ type: SuccessHandler })
+  @ApiBadRequestResponse({ type: ErrorHandler })
   async update(@Body() updateCategoryDto: UpdateCategoryDto, @Request() req): Promise<SuccessHandler> {
     try {
       await this.categoriesService.update(updateCategoryDto, req.user);
@@ -41,9 +51,11 @@ export class CategoriesController {
   @UseGuards(JwtAuthGuard)
   @Delete()
   @HttpCode(200)
-  async delete(@Body() { id }: { id: number }): Promise<SuccessHandler> {
+  @ApiOkResponse({ type: SuccessHandler })
+  @ApiBadRequestResponse({ type: ErrorHandler })
+  async delete(@Body() deleteCategoryDto: DeleteCategoryDto): Promise<SuccessHandler> {
     try {
-      await this.categoriesService.delete(id);
+      await this.categoriesService.delete(deleteCategoryDto.id);
 
       return successHandler();
     } catch (error) {
@@ -54,6 +66,8 @@ export class CategoriesController {
   @UseGuards(JwtAuthGuard)
   @Get('getAll')
   @HttpCode(200)
+  @ApiOkResponse({ type: AllCategoriesOutputDto })
+  @ApiBadRequestResponse({ type: ErrorHandler })
   async getAll(@Request() req): Promise<{ categories: Category[] }> {
     try {
       return {

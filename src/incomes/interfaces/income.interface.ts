@@ -1,7 +1,7 @@
-import { Category } from '../../categories/interfaces/categories.inteface';
+import { Category } from '../../categories/interfaces/categories.interface';
 import { User } from '../../users/interfaces/users.interface';
 
-export interface Income {
+export class Income {
   id?: number;
   user: User;
   category: Category;

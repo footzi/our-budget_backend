@@ -1,4 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+
 import { Users } from '../../users/entities/users.entity';
 import { Balance } from '../interfaces/balance.interface';
 

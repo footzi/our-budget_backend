@@ -1,4 +1,4 @@
-export interface AddExpensePlanDto {
+export class AddExpenseFactDto {
   categoryId: number;
   value: number;
   date: Date;

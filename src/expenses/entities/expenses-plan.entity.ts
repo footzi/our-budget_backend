@@ -1,7 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
-import { Users } from '../../users/entities/users.entity';
-import { Expense } from '../interfaces/expense.interfaces';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+
 import { Categories } from '../../categories/entities/categories.entity';
+import { Users } from '../../users/entities/users.entity';
+import { Expense } from '../interfaces/expense.interface';
 
 @Entity()
 export class ExpensesPlan implements Expense {

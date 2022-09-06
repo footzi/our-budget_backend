@@ -1,4 +1,4 @@
-export interface UpdateExpenseFactDto {
+export class UpdateExpenseFactDto {
   id: number;
   categoryId?: number;
   value?: number;

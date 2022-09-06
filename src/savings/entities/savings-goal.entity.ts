@@ -1,6 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
-import { SavingGoal } from '../interfaces/saving.interfaces';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+
 import { Users } from '../../users/entities/users.entity';
+import { SavingGoal } from '../interfaces/saving.interface';
 
 @Entity()
 export class SavingsGoal implements SavingGoal {

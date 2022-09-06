@@ -1,7 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Category } from '../interfaces/categories.inteface';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+
 import { Users } from '../../users/entities/users.entity';
 import { CATEGORIES_TYPES } from '../constants.categories';
+import { Category } from '../interfaces/categories.interface';
 
 @Entity()
 export class Categories implements Category {

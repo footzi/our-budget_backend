@@ -1,15 +1,20 @@
 import { Body, Controller, Delete, Get, HttpCode, Post, Put, Query, Request, UseGuards } from '@nestjs/common';
+import { ApiBadRequestResponse, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
+
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { errorHandler } from '../utils/errorHandler';
-import { ExpensesService } from './expenses.service';
-import { AddExpensePlanDto } from './dto/add-expense-plan-dto';
-import { AddExpenseFactDto } from './dto/add-expense-fact-dto';
-import { Expense } from './interfaces/expense.interfaces';
-import { UpdateExpensePlanDto } from './dto/update-expense-plan.dto';
+import { ErrorHandler } from '../utils/errorHandler/interfaces';
 import { successHandler } from '../utils/successHandler';
 import { SuccessHandler } from '../utils/successHandler/interfaces';
+import { AddExpenseFactDto } from './dto/add-expense-fact.dto';
+import { AddExpensePlanDto } from './dto/add-expense-plan.dto';
+import { DeleteExpenseDto } from './dto/delete-expense.dto';
+import { ExpenseOutputDto } from './dto/expense-output.dto';
+import { ExpensesOutputDto } from './dto/expenses-output.dto';
+import { GetAllExpensesOutputDto } from './dto/get-all-expenses-output.dto';
 import { UpdateExpenseFactDto } from './dto/update-expense-fact.dto';
-import { GetAllExpensesOutputDto } from './dto/get-all-expenses-output-dto';
+import { UpdateExpensePlanDto } from './dto/update-expense-plan.dto';
+import { ExpensesService } from './expenses.service';
 
 @Controller('/api/expenses')
 export class ExpensesController {
@@ -18,7 +23,9 @@ export class ExpensesController {
   @UseGuards(JwtAuthGuard)
   @Post('/plan')
   @HttpCode(201)
-  async addPlan(@Body() addExpensePlan: AddExpensePlanDto, @Request() req): Promise<{ expense: Expense }> {
+  @ApiCreatedResponse({ type: ExpenseOutputDto })
+  @ApiBadRequestResponse({ type: ErrorHandler })
+  async addPlan(@Body() addExpensePlan: AddExpensePlanDto, @Request() req): Promise<ExpenseOutputDto> {
     try {
       return {
         expense: await this.expensesService.addPlan(addExpensePlan, req.user),
@@ -31,6 +38,8 @@ export class ExpensesController {
   @UseGuards(JwtAuthGuard)
   @Put('/plan')
   @HttpCode(200)
+  @ApiOkResponse({ type: SuccessHandler })
+  @ApiBadRequestResponse({ type: ErrorHandler })
   async updatePlan(@Body() updateExpensePlan: UpdateExpensePlanDto, @Request() req): Promise<SuccessHandler> {
     try {
       await this.expensesService.changePlan(updateExpensePlan, req.user);
@@ -44,9 +53,11 @@ export class ExpensesController {
   @UseGuards(JwtAuthGuard)
   @Delete('/plan')
   @HttpCode(200)
-  async removePlan(@Body() { id }: { id: number }): Promise<SuccessHandler> {
+  @ApiOkResponse({ type: SuccessHandler })
+  @ApiBadRequestResponse({ type: ErrorHandler })
+  async removePlan(@Body() deleteExpenseDto: DeleteExpenseDto): Promise<SuccessHandler> {
     try {
-      await this.expensesService.deletePlan(id);
+      await this.expensesService.deletePlan(deleteExpenseDto.id);
 
       return successHandler();
     } catch (error) {
@@ -57,7 +68,9 @@ export class ExpensesController {
   @UseGuards(JwtAuthGuard)
   @Post('/fact')
   @HttpCode(201)
-  async addFact(@Body() addExpenseFact: AddExpenseFactDto, @Request() req): Promise<{ expense: Expense }> {
+  @ApiCreatedResponse({ type: ExpenseOutputDto })
+  @ApiBadRequestResponse({ type: ErrorHandler })
+  async addFact(@Body() addExpenseFact: AddExpenseFactDto, @Request() req): Promise<ExpenseOutputDto> {
     try {
       return {
         expense: await this.expensesService.addFact(addExpenseFact, req.user),
@@ -70,6 +83,8 @@ export class ExpensesController {
   @UseGuards(JwtAuthGuard)
   @Put('/fact')
   @HttpCode(200)
+  @ApiOkResponse({ type: SuccessHandler })
+  @ApiBadRequestResponse({ type: ErrorHandler })
   async updateFact(@Body() updateExpenseFact: UpdateExpenseFactDto, @Request() req): Promise<SuccessHandler> {
     try {
       await this.expensesService.changeFact(updateExpenseFact, req.user);
@@ -83,9 +98,11 @@ export class ExpensesController {
   @UseGuards(JwtAuthGuard)
   @Delete('/fact')
   @HttpCode(200)
-  async removeFact(@Body() { id }: { id: number }, @Request() req): Promise<SuccessHandler> {
+  @ApiOkResponse({ type: SuccessHandler })
+  @ApiBadRequestResponse({ type: ErrorHandler })
+  async removeFact(@Body() deleteExpenseDto: DeleteExpenseDto, @Request() req): Promise<SuccessHandler> {
     try {
-      await this.expensesService.deleteFact(id, req.user);
+      await this.expensesService.deleteFact(deleteExpenseDto.id, req.user);
 
       return successHandler();
     } catch (error) {
@@ -96,11 +113,13 @@ export class ExpensesController {
   @UseGuards(JwtAuthGuard)
   @Get('/plan/getAll')
   @HttpCode(200)
+  @ApiOkResponse({ type: ExpensesOutputDto })
+  @ApiBadRequestResponse({ type: ErrorHandler })
   async getAllPlansByPeriod(
     @Body('start') start: string,
     @Body('end') end: string,
     @Request() req
-  ): Promise<{ expenses: Expense[] }> {
+  ): Promise<ExpensesOutputDto> {
     try {
       return {
         expenses: await this.expensesService.getAllPlansByPeriod(start, end, req.user.id),
@@ -113,11 +132,13 @@ export class ExpensesController {
   @UseGuards(JwtAuthGuard)
   @Get('/fact/getAll')
   @HttpCode(200)
+  @ApiOkResponse({ type: ExpensesOutputDto })
+  @ApiBadRequestResponse({ type: ErrorHandler })
   async getAllFactsByPeriod(
     @Body('start') start: string,
     @Body('end') end: string,
     @Request() req
-  ): Promise<{ expenses: Expense[] }> {
+  ): Promise<ExpensesOutputDto> {
     try {
       return {
         expenses: await this.expensesService.getAllFactsByPeriod(start, end, req.user.id),
@@ -130,6 +151,8 @@ export class ExpensesController {
   @UseGuards(JwtAuthGuard)
   @Get('/getAll')
   @HttpCode(200)
+  @ApiOkResponse({ type: GetAllExpensesOutputDto })
+  @ApiBadRequestResponse({ type: ErrorHandler })
   async getAllExpenses(
     @Query('start') start: string,
     @Query('end') end: string,
