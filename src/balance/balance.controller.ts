@@ -1,5 +1,7 @@
-import { Body, Controller, Get, HttpCode, Put, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Inject, Put, Request, UseGuards } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiOkResponse } from '@nestjs/swagger';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { errorHandler } from '../utils/errorHandler';
@@ -12,7 +14,11 @@ import { UpdateBalanceDto } from './dto/update-balance.dto';
 
 @Controller('/api/balance')
 export class BalanceController {
-  constructor(private readonly balanceService: BalanceService) {}
+  constructor(
+    private readonly balanceService: BalanceService,
+    @Inject(WINSTON_MODULE_PROVIDER)
+    private readonly logger: Logger
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Get('/')
@@ -27,7 +33,7 @@ export class BalanceController {
         },
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -36,13 +42,13 @@ export class BalanceController {
   @HttpCode(200)
   @ApiOkResponse({ type: SuccessHandler })
   @ApiBadRequestResponse({ type: ErrorHandler })
-  async updateUBalance(@Body() updateBalanceDto: UpdateBalanceDto, @Request() req): Promise<SuccessHandler> {
+  async updateBalance(@Body() updateBalanceDto: UpdateBalanceDto, @Request() req): Promise<SuccessHandler> {
     try {
       await this.balanceService.update(updateBalanceDto, req.user);
 
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 }

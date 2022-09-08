@@ -1,5 +1,7 @@
-import { Body, Controller, Delete, Get, HttpCode, Post, Put, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Inject, Post, Put, Request, UseGuards } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { errorHandler } from '../utils/errorHandler';
@@ -16,7 +18,11 @@ import { Category } from './interfaces/categories.interface';
 
 @Controller('/api/categories')
 export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+  constructor(
+    private readonly categoriesService: CategoriesService,
+    @Inject(WINSTON_MODULE_PROVIDER)
+    private readonly logger: Logger
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -29,7 +35,7 @@ export class CategoriesController {
         category: await this.categoriesService.add(addCategoryDto, req.user),
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -44,7 +50,7 @@ export class CategoriesController {
 
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -53,13 +59,13 @@ export class CategoriesController {
   @HttpCode(200)
   @ApiOkResponse({ type: SuccessHandler })
   @ApiBadRequestResponse({ type: ErrorHandler })
-  async delete(@Body() deleteCategoryDto: DeleteCategoryDto): Promise<SuccessHandler> {
+  async delete(@Body() deleteCategoryDto: DeleteCategoryDto, @Request() req): Promise<SuccessHandler> {
     try {
       await this.categoriesService.delete(deleteCategoryDto.id);
 
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -74,7 +80,7 @@ export class CategoriesController {
         categories: await this.categoriesService.getAll(req.user),
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 }

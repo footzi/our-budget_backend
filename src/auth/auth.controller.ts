@@ -1,5 +1,7 @@
-import { Body, Controller, Delete, HttpCode, Post, Put, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, HttpCode, Inject, Post, Put, Request, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 
 import { User } from '../users/interfaces/users.interface';
 import { errorHandler } from '../utils/errorHandler';
@@ -12,7 +14,11 @@ import { Tokens } from './interfaces/auth.interfaces';
 
 @Controller()
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    @Inject(WINSTON_MODULE_PROVIDER)
+    private readonly logger: Logger
+  ) {}
 
   @UseGuards(LocalAuthGuard)
   @Post('/api/auth/login')
@@ -20,17 +26,17 @@ export class AuthController {
     try {
       return this.authService.login(req.user);
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
   @HttpCode(201)
   @Post('/api/auth/signup')
-  async signup(@Body() signUpDto: SignUpDto): Promise<{ user: User; tokens: Tokens }> {
+  async signup(@Body() signUpDto: SignUpDto, @Request() req): Promise<{ user: User; tokens: Tokens }> {
     try {
       return this.authService.signUp(signUpDto);
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -40,7 +46,7 @@ export class AuthController {
     try {
       return this.authService.login(req.user);
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -51,7 +57,7 @@ export class AuthController {
       await this.authService.logout(req.user.id);
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 }

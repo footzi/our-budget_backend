@@ -1,5 +1,7 @@
-import { Body, Controller, Delete, Get, HttpCode, Post, Put, Query, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Inject, Post, Put, Query, Request, UseGuards } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { errorHandler } from '../utils/errorHandler';
@@ -22,7 +24,11 @@ import { SavingsService } from './savings.service';
 
 @Controller('/api/savings')
 export class SavingsController {
-  constructor(private readonly savingsService: SavingsService) {}
+  constructor(
+    private readonly savingsService: SavingsService,
+    @Inject(WINSTON_MODULE_PROVIDER)
+    private readonly logger: Logger
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post('/goal')
@@ -35,7 +41,7 @@ export class SavingsController {
         savingGoal: await this.savingsService.addGoal(addSavingGoal, req.user),
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -50,7 +56,7 @@ export class SavingsController {
 
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -59,13 +65,13 @@ export class SavingsController {
   @HttpCode(200)
   @ApiOkResponse({ type: SuccessHandler })
   @ApiBadRequestResponse({ type: ErrorHandler })
-  async deleteGoal(@Body() deleteSavingGoalDto: DeleteSavingGoalDto): Promise<SuccessHandler> {
+  async deleteGoal(@Body() deleteSavingGoalDto: DeleteSavingGoalDto, @Request() req): Promise<SuccessHandler> {
     try {
       await this.savingsService.deleteGoal(deleteSavingGoalDto.id);
 
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -80,7 +86,7 @@ export class SavingsController {
         savingGoals: await this.savingsService.getAllGoals(req.user),
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -95,7 +101,7 @@ export class SavingsController {
         saving: await this.savingsService.addPlan(addSavingPlan, req.user),
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -109,7 +115,7 @@ export class SavingsController {
       await this.savingsService.updatePlan(updateSavingPlan, req.user);
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -118,13 +124,13 @@ export class SavingsController {
   @HttpCode(200)
   @ApiOkResponse({ type: SuccessHandler })
   @ApiBadRequestResponse({ type: ErrorHandler })
-  async deletePlan(@Body() deleteSavingDto: DeleteSavingDto): Promise<SuccessHandler> {
+  async deletePlan(@Body() deleteSavingDto: DeleteSavingDto, @Request() req): Promise<SuccessHandler> {
     try {
       await this.savingsService.deletePlan(deleteSavingDto.id);
 
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -139,7 +145,7 @@ export class SavingsController {
         saving: await this.savingsService.addFact(addSavingFact, req.user),
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -153,7 +159,7 @@ export class SavingsController {
       await this.savingsService.updateFact(updateSavingFact, req.user);
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -168,7 +174,7 @@ export class SavingsController {
 
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -196,7 +202,7 @@ export class SavingsController {
         },
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 }

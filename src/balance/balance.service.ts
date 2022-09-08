@@ -1,6 +1,8 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Repository } from 'typeorm';
+import { Logger } from 'winston';
 
 import { Users } from '../users/entities/users.entity';
 import { User } from '../users/interfaces/users.interface';
@@ -12,7 +14,9 @@ import { Balance } from './interfaces/balance.interface';
 export class BalanceService {
   constructor(
     @InjectRepository(Balances)
-    private balanceRepository: Repository<Balance>
+    private balanceRepository: Repository<Balance>,
+    @Inject(WINSTON_MODULE_PROVIDER)
+    private readonly logger: Logger
   ) {}
 
   /**
@@ -54,6 +58,8 @@ export class BalanceService {
 
       await this.balanceRepository.save(balance);
     }
+
+    this.logger.info(`Изменение баланса у пользователя ${userId}`);
   }
 
   /**
@@ -80,5 +86,7 @@ export class BalanceService {
     }
 
     await this.balanceRepository.update({ user: { id: user.id } }, updateBalanceDto);
+
+    this.logger.info(`Обновление баланса у пользователя ${user.id}`);
   }
 }

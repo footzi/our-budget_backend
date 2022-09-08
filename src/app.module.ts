@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { WinstonModule } from 'nest-winston';
+import { format, transports } from 'winston';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -22,6 +24,9 @@ import { SavingsGoal } from './savings/entities/savings-goal.entity';
 import { SavingsPlan } from './savings/entities/savings-plan.entity';
 import { SavingsModule } from './savings/savings.module';
 import { Users } from './users/entities/users.entity';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const path = require('path');
 
 @Module({
   imports: [
@@ -54,6 +59,18 @@ import { Users } from './users/entities/users.entity';
         ],
       }),
       inject: [ConfigService],
+    }),
+    WinstonModule.forRoot({
+      format: format.combine(format.timestamp(), format.json(), format.prettyPrint()),
+      transports: [
+        new transports.File({
+          dirname: path.join(__dirname, '../logs/'),
+          filename: 'error.log',
+          level: 'error',
+        }),
+        new transports.File({ dirname: path.join(__dirname, '../logs/'), filename: 'warn.log', level: 'warn' }),
+        new transports.File({ dirname: path.join(__dirname, '../logs/'), filename: 'info.log', level: 'info' }),
+      ],
     }),
   ],
   controllers: [AppController],

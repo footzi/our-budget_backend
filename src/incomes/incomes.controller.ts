@@ -1,5 +1,7 @@
-import { Body, Controller, Delete, Get, HttpCode, Post, Put, Query, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Inject, Post, Put, Query, Request, UseGuards } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { errorHandler } from '../utils/errorHandler';
@@ -18,7 +20,11 @@ import { IncomesService } from './incomes.service';
 
 @Controller('/api/incomes')
 export class IncomesController {
-  constructor(private readonly incomesService: IncomesService) {}
+  constructor(
+    private readonly incomesService: IncomesService,
+    @Inject(WINSTON_MODULE_PROVIDER)
+    private readonly logger: Logger
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post('/plan')
@@ -31,7 +37,7 @@ export class IncomesController {
         income: await this.incomesService.addPlan(addIncomePlan, req.user),
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -46,7 +52,7 @@ export class IncomesController {
 
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -55,13 +61,13 @@ export class IncomesController {
   @HttpCode(200)
   @ApiOkResponse({ type: SuccessHandler })
   @ApiBadRequestResponse({ type: ErrorHandler })
-  async removePlan(@Body() deleteIncomeDto: DeleteIncomeDto): Promise<SuccessHandler> {
+  async removePlan(@Body() deleteIncomeDto: DeleteIncomeDto, @Request() req): Promise<SuccessHandler> {
     try {
       await this.incomesService.deletePlan(deleteIncomeDto.id);
 
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -76,7 +82,7 @@ export class IncomesController {
         income: await this.incomesService.addFact(addIncomeFact, req.user),
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -91,7 +97,7 @@ export class IncomesController {
 
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -106,7 +112,7 @@ export class IncomesController {
 
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -125,7 +131,7 @@ export class IncomesController {
         incomes: await this.incomesService.getAllPlansByPeriod(start, end, req.user.id),
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -144,7 +150,7 @@ export class IncomesController {
         incomes: await this.incomesService.getAllFactsByPeriod(start, end, req.user.id),
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -172,7 +178,7 @@ export class IncomesController {
         },
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 }

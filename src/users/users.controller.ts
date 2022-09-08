@@ -1,5 +1,7 @@
-import { Body, Controller, Get, HttpCode, Put, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Inject, Put, Request, UseGuards } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiOkResponse } from '@nestjs/swagger';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { errorHandler } from '../utils/errorHandler';
@@ -12,7 +14,11 @@ import { UsersService } from './users.service';
 
 @Controller('/api/users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    @Inject(WINSTON_MODULE_PROVIDER)
+    private readonly logger: Logger
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Get()
@@ -25,7 +31,7 @@ export class UsersController {
         user: await this.usersService.getById(req.user.id),
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -40,7 +46,7 @@ export class UsersController {
 
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 }

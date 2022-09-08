@@ -1,5 +1,7 @@
-import { Body, Controller, Delete, Get, HttpCode, Post, Put, Query, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Inject, Post, Put, Query, Request, UseGuards } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { errorHandler } from '../utils/errorHandler';
@@ -18,7 +20,11 @@ import { ExpensesService } from './expenses.service';
 
 @Controller('/api/expenses')
 export class ExpensesController {
-  constructor(private readonly expensesService: ExpensesService) {}
+  constructor(
+    private readonly expensesService: ExpensesService,
+    @Inject(WINSTON_MODULE_PROVIDER)
+    private readonly logger: Logger
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post('/plan')
@@ -31,7 +37,7 @@ export class ExpensesController {
         expense: await this.expensesService.addPlan(addExpensePlan, req.user),
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -46,7 +52,7 @@ export class ExpensesController {
 
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -55,13 +61,13 @@ export class ExpensesController {
   @HttpCode(200)
   @ApiOkResponse({ type: SuccessHandler })
   @ApiBadRequestResponse({ type: ErrorHandler })
-  async removePlan(@Body() deleteExpenseDto: DeleteExpenseDto): Promise<SuccessHandler> {
+  async removePlan(@Body() deleteExpenseDto: DeleteExpenseDto, @Request() req): Promise<SuccessHandler> {
     try {
       await this.expensesService.deletePlan(deleteExpenseDto.id);
 
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -76,7 +82,7 @@ export class ExpensesController {
         expense: await this.expensesService.addFact(addExpenseFact, req.user),
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -91,7 +97,7 @@ export class ExpensesController {
 
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -106,7 +112,7 @@ export class ExpensesController {
 
       return successHandler();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -125,7 +131,7 @@ export class ExpensesController {
         expenses: await this.expensesService.getAllPlansByPeriod(start, end, req.user.id),
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -144,7 +150,7 @@ export class ExpensesController {
         expenses: await this.expensesService.getAllFactsByPeriod(start, end, req.user.id),
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 
@@ -172,7 +178,7 @@ export class ExpensesController {
         },
       };
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, this.logger, req);
     }
   }
 }
