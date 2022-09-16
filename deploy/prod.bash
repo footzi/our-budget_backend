@@ -1,6 +1,12 @@
 #!/bin/bash
+source ../.env
 
-ssh -p 49155 footzi@ovz1.j676141.m6zkp.vps.myjino.ru "
-  cd /var/www/our-budget_backend/ && sudo -S git pull &&
-  sudo yarn && sudo yarn build && sudo yarn stop:pm2 && sudo yarn start:pm2
+ssh -p $DEPLOY_PORT $DEPLOY_URL "
+  cd $DEPLOY_FOLDER &&
+  sudo -S git reset --hard origin/master &&
+  sudo -S git pull &&
+  sudo -S yarn &&
+  sudo -S yarn build &&
+  sudo -S yarn stop:pm2 &&
+  sudo -S yarn start:pm2
 "

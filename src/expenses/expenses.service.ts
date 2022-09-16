@@ -254,4 +254,30 @@ export class ExpensesService {
       relations: ['category'],
     });
   }
+
+  /**
+   * Получение фактов по id категории
+   */
+  getFactsByCategory(categoryId: number) {
+    return this.expensesFactRepository.find({
+      where: {
+        category: {
+          id: categoryId,
+        },
+      },
+    });
+  }
+
+  /**
+   * Получение планов по id категории
+   */
+  getPlansByCategory(categoryId: number) {
+    return this.expensesPlanRepository.find({
+      where: {
+        category: {
+          id: categoryId,
+        },
+      },
+    });
+  }
 }

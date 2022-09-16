@@ -156,6 +156,13 @@ export class SavingsService {
   }
 
   /**
+   * Получает копилку
+   */
+  async getGoal(goalId): Promise<SavingGoal> {
+    return this.savingsGoalRepository.findOneBy({ id: goalId });
+  }
+
+  /**
    * Добавляет копилку
    */
   async addGoal(addSavingGoal: AddSavingGoalDto, user: User): Promise<SavingGoal> {
@@ -186,6 +193,17 @@ export class SavingsService {
   async deleteGoal(id: number) {
     if (!id) {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
+    }
+
+    const facts = await this.getFactsByGoalId(id);
+    const plans = await this.getPlansByGoalId(id);
+    const isNotEmpty = facts.length > 0 || plans.length > 0;
+
+    if (isNotEmpty) {
+      throw new HttpException(
+        'Не возможно удалить копилку, если есть значениях в Планах или Фактах',
+        HttpStatus.BAD_REQUEST
+      );
     }
 
     await this.savingsGoalRepository.delete(id);
@@ -343,7 +361,7 @@ export class SavingsService {
   }
 
   /**
-   * Получает cумму доходов по дате
+   * Получает сумму доходов по дате
    */
   async getPlansSumByPeriod(start: string, end: string, userId: number) {
     if (!start || !end || !userId) {
@@ -371,7 +389,7 @@ export class SavingsService {
   }
 
   /**
-   * Получает cумму доходов по дате
+   * Получает сумму доходов по дате
    */
   async getFactsSumByPeriod(start: string, end: string, userId: number) {
     if (!start || !end || !userId) {
@@ -396,5 +414,31 @@ export class SavingsService {
         return acc - value;
       }
     }, 0);
+  }
+
+  /**
+   * Получение фактов по id копилки
+   */
+  getFactsByGoalId(goalId: number) {
+    return this.savingsFactRepository.find({
+      where: {
+        goal: {
+          id: goalId,
+        },
+      },
+    });
+  }
+
+  /**
+   * Получение планов по id копилки
+   */
+  getPlansByGoalId(goalId: number) {
+    return this.savingsPlanRepository.find({
+      where: {
+        goal: {
+          id: goalId,
+        },
+      },
+    });
   }
 }

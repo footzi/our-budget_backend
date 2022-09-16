@@ -253,4 +253,30 @@ export class IncomesService {
       relations: ['category'],
     });
   }
+
+  /**
+   * Получение фактов по id категории
+   */
+  getFactsByCategory(categoryId: number) {
+    return this.incomeFactRepository.find({
+      where: {
+        category: {
+          id: categoryId,
+        },
+      },
+    });
+  }
+
+  /**
+   * Получение планов по id категории
+   */
+  getPlansByCategory(categoryId: number) {
+    return this.incomePlanRepository.find({
+      where: {
+        category: {
+          id: categoryId,
+        },
+      },
+    });
+  }
 }
