@@ -10,7 +10,7 @@ import { Crypt } from '../utils/crypt';
 import { GenerateRandom } from '../utils/generateRandom';
 import { SignUpDto } from './dto/signup.dto';
 import { Auths } from './entitites/auth.entity';
-import { Auth, Tokens } from './interfaces/auth.interfaces';
+import { Auth, Tokens } from './interfaces/auth.interface';
 
 @Injectable()
 export class AuthService {

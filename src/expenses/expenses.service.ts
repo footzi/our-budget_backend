@@ -233,7 +233,7 @@ export class ExpensesService {
   }
 
   /**
-   * Получает спискок фактических трат по дате
+   * Получает список фактических трат по дате
    */
   getAllFactsByPeriod(start: string, end: string, userId: number): Promise<Expense[]> {
     // @todo вынести в какой-нибудь валидатор

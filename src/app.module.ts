@@ -64,12 +64,11 @@ const path = require('path');
       format: format.combine(format.timestamp(), format.json(), format.prettyPrint()),
       transports: [
         new transports.File({
-          dirname: path.join(__dirname, '../logs/'),
-          filename: 'error.log',
+          filename: path.join(__dirname, '../logs/error.log'),
           level: 'error',
         }),
-        new transports.File({ dirname: path.join(__dirname, '../logs/'), filename: 'warn.log', level: 'warn' }),
-        new transports.File({ dirname: path.join(__dirname, '../logs/'), filename: 'info.log', level: 'info' }),
+        new transports.File({ filename: path.join(__dirname, '../logs/warn.log'), level: 'warn' }),
+        new transports.File({ filename: path.join(__dirname, '../logs/info.log'), level: 'info' }),
       ],
     }),
   ],

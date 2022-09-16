@@ -1,14 +1,7 @@
 import { User } from '../../users/interfaces/users.interface';
 import { Tokens } from '../interfaces/auth.interface';
 
-export class SignUpDto {
-  login: string;
-  firstName: string;
-  password: string;
-  password2: string;
-}
-
-export class SignUpOutDto {
+export class LoginOutDto {
   user: User;
   tokens: Tokens;
 }

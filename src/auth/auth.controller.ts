@@ -1,16 +1,19 @@
 import { Body, Controller, Delete, HttpCode, Inject, Post, Put, Request, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiBadRequestResponse, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 
-import { User } from '../users/interfaces/users.interface';
 import { errorHandler } from '../utils/errorHandler';
+import { ErrorHandler } from '../utils/errorHandler/interfaces';
 import { successHandler } from '../utils/successHandler';
+import { SuccessHandler } from '../utils/successHandler/interfaces';
 import { AuthService } from './auth.service';
-import { SignUpDto } from './dto/signup.dto';
+import { LoginOutDto } from './dto/login.dto';
+import { RefreshOutDto } from './dto/refresh.dto';
+import { SignUpDto, SignUpOutDto } from './dto/signup.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import { Tokens } from './interfaces/auth.interfaces';
 
 @Controller()
 export class AuthController {
@@ -22,9 +25,11 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('/api/auth/login')
-  async login(@Request() req) {
+  @ApiOkResponse({ type: LoginOutDto })
+  @ApiBadRequestResponse({ type: ErrorHandler })
+  async login(@Request() req): Promise<LoginOutDto> {
     try {
-      return this.authService.login(req.user);
+      return await this.authService.login(req.user);
     } catch (error) {
       errorHandler(error, this.logger, req);
     }
@@ -32,9 +37,11 @@ export class AuthController {
 
   @HttpCode(201)
   @Post('/api/auth/signup')
-  async signup(@Body() signUpDto: SignUpDto, @Request() req): Promise<{ user: User; tokens: Tokens }> {
+  @ApiCreatedResponse({ type: SignUpOutDto })
+  @ApiBadRequestResponse({ type: ErrorHandler })
+  async signup(@Body() signUpDto: SignUpDto, @Request() req): Promise<SignUpOutDto> {
     try {
-      return this.authService.signUp(signUpDto);
+      return await this.authService.signUp(signUpDto);
     } catch (error) {
       errorHandler(error, this.logger, req);
     }
@@ -42,9 +49,11 @@ export class AuthController {
 
   @UseGuards(AuthGuard('jwt-refreshtoken'))
   @Put('/api/auth/refresh')
-  async refresh(@Request() req): Promise<{ user: User; tokens: Tokens }> {
+  @ApiOkResponse({ type: RefreshOutDto })
+  @ApiBadRequestResponse({ type: ErrorHandler })
+  async refresh(@Request() req): Promise<RefreshOutDto> {
     try {
-      return this.authService.login(req.user);
+      return await this.authService.login(req.user);
     } catch (error) {
       errorHandler(error, this.logger, req);
     }
@@ -52,7 +61,9 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('/api/auth/logout')
-  async logout(@Request() req) {
+  @ApiOkResponse({ type: SuccessHandler })
+  @ApiBadRequestResponse({ type: ErrorHandler })
+  async logout(@Request() req): Promise<SuccessHandler> {
     try {
       await this.authService.logout(req.user.id);
       return successHandler();
