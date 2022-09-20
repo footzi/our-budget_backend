@@ -183,7 +183,7 @@ export class IncomesService {
         },
       },
       order: {
-        date: 'DESC',
+        createdAt: 'DESC',
       },
       relations: ['category'],
     });
@@ -211,7 +211,7 @@ export class IncomesService {
   }
 
   /**
-   * Получает cумму фактических доходов по дате
+   * Получает сумму фактических доходов по дате
    */
   async getFactsSumByPeriod(start: string, end: string, userId: number) {
     if (!start || !end || !userId) {
@@ -224,6 +224,9 @@ export class IncomesService {
         user: {
           id: userId,
         },
+      },
+      order: {
+        createdAt: 'DESC',
       },
       select: ['value'],
     });

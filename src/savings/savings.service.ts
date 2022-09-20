@@ -332,7 +332,7 @@ export class SavingsService {
         },
       },
       order: {
-        date: 'DESC',
+        createdAt: 'DESC',
       },
       relations: ['goal'],
     });

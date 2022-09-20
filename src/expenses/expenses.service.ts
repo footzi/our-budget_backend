@@ -184,14 +184,14 @@ export class ExpensesService {
         date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
       },
       order: {
-        date: 'DESC',
+        createdAt: 'DESC',
       },
       relations: ['category'],
     });
   }
 
   /**
-   * Получает cумму планируемых доходов по дате
+   * Получает сумму планируемых доходов по дате
    */
   async getPlansSumByPeriod(start: string, end: string, userId: number) {
     if (!start || !end || !userId) {
@@ -212,7 +212,7 @@ export class ExpensesService {
   }
 
   /**
-   * Получает cумму фактических доходов по дате
+   * Получает сумму фактических доходов по дате
    */
   async getFactsSumByPeriod(start: string, end: string, userId) {
     if (!start || !end || !userId) {
