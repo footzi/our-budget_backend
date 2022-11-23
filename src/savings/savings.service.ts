@@ -3,8 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 
 import { BalanceService } from '../balance/balance.service';
+import { CurrenciesValues } from '../currencies/curerncies.interfaces';
+import { DEFAULT_CURRENCY } from '../currencies/currencies.constants';
+import { Date } from '../date/date.index';
 import { Users } from '../users/entities/users.entity';
-import { User } from '../users/interfaces/users.interface';
+import { ValidatorService } from '../validator/validator.service';
 import { AddSavingFactDto } from './dto/add-saving-fact.dto';
 import { AddSavingGoalDto } from './dto/add-saving-goal.dto';
 import { AddSavingPlanDto } from './dto/add-saving-plan.dto';
@@ -17,9 +20,6 @@ import { SavingsPlan } from './entities/savings-plan.entity';
 import { Saving, SavingGoal } from './interfaces/saving.interface';
 import { SAVING_ACTION_TYPE } from './savings.constants';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const dayjs = require('dayjs');
-
 export class SavingsService {
   constructor(
     @InjectRepository(SavingsGoal)
@@ -31,54 +31,62 @@ export class SavingsService {
     @InjectRepository(SavingsPlan)
     private savingsPlanRepository: Repository<Saving>,
 
-    private balanceService: BalanceService
+    private balanceService: BalanceService,
+
+    private validator: ValidatorService
   ) {}
 
   /**
    * Изменяет баланс при добавлении в копилку
    */
   private async changeBalanceAdd(userId: number, item: Saving) {
-    const { value, actionType } = item;
+    this.validator.getIsRequiredFields(userId, item);
+
+    const { value, actionType, currency } = item;
 
     const result = actionType === SAVING_ACTION_TYPE.INCOME ? -value : value;
-    await this.balanceService.changeBalance(userId, result);
+
+    await this.balanceService.increment(userId, result, currency);
   }
 
   /**
    * Изменяет баланс при обновлении копилки
    */
   private async changeBalanceUpdate(userId: number, item: Saving, previousItem: Saving) {
-    const { actionType, value } = item;
+    this.validator.getIsRequiredFields(userId, item, previousItem);
+
+    const { actionType, value, currency } = item;
 
     const diff = previousItem.value - Number(value);
     const result = actionType === SAVING_ACTION_TYPE.INCOME ? diff : -diff;
 
-    await this.balanceService.changeBalance(userId, result);
+    await this.balanceService.increment(userId, result, currency);
   }
 
   /**
    * Изменяет баланс при удалении копилки
    */
   private async changeBalanceDelete(userId: number, previousItem: Saving) {
-    const { actionType, value } = previousItem;
+    this.validator.getIsRequiredFields(userId, previousItem);
+
+    const { actionType, value, currency } = previousItem;
 
     const result = actionType === SAVING_ACTION_TYPE.INCOME ? value : -value;
-    await this.balanceService.changeBalance(userId, result);
+    await this.balanceService.increment(userId, result, currency);
   }
 
   /**
    * Создает цель
    */
-  private createGoal(input: AddSavingGoalDto | UpdateSavingGoalDto, userId): SavingGoal {
-    if (!input.name) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+  private createGoal(userId: number, input: AddSavingGoalDto | UpdateSavingGoalDto): SavingGoal {
+    this.validator.getIsRequiredFields(userId, input?.name);
 
     const user = new Users();
     user.id = userId;
 
     return {
       name: input.name,
+      currency: input.currency ?? DEFAULT_CURRENCY,
       description: input.description ?? '',
       finishValue: input.finishValue ?? null,
       value: input.value ?? 0,
@@ -89,13 +97,12 @@ export class SavingsService {
   /**
    * Создает элемент копилки
    */
-  private createSaving(input: AddSavingPlanDto | UpdateSavingPlanDto, userId: number): Saving {
-    if (!input.value || !input.date || !input.goalId) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+  private async createSaving(userId: number, input: AddSavingPlanDto | UpdateSavingPlanDto): Promise<Saving> {
+    this.validator.getIsRequiredFields(userId, input?.value, input?.date, input?.goalId);
 
-    const goal = new SavingsGoal();
-    goal.id = input.goalId;
+    const goal = await this.getGoal(input.goalId);
+
+    this.validator.getIsEqualCurrency(input.currency, goal.currency);
 
     const user = new Users();
     user.id = userId;
@@ -103,6 +110,7 @@ export class SavingsService {
     return {
       value: Number(input.value),
       date: input.date,
+      currency: input.currency ?? DEFAULT_CURRENCY,
       comment: input.comment ?? '',
       actionType: input.actionType,
       goal,
@@ -114,6 +122,8 @@ export class SavingsService {
    * Обновляет значение копилки при добавлении
    */
   private async changeAddValueGoal(goalId: number, item: Saving) {
+    this.validator.getIsRequiredFields(goalId, item);
+
     const { actionType, value } = item;
 
     const currentGoal = await this.savingsGoalRepository.findOne({
@@ -130,6 +140,8 @@ export class SavingsService {
    * Обновляет значение копилки при обновлении
    */
   private async changeUpdateValueGoal(goalId: number, item: Saving, previousItem: Saving) {
+    this.validator.getIsRequiredFields(goalId, item, previousItem);
+
     const { actionType, value } = item;
 
     const currentGoal = await this.savingsGoalRepository.findOne({
@@ -148,6 +160,8 @@ export class SavingsService {
    * Обновляет значение копилки при удалении
    */
   private async changeDeleteValueGoal(previousItem: Saving) {
+    this.validator.getIsRequiredFields(previousItem);
+
     const { actionType, value, goal } = previousItem;
 
     const saveValue = actionType === SAVING_ACTION_TYPE.INCOME ? goal.value - value : goal.value + value;
@@ -165,8 +179,10 @@ export class SavingsService {
   /**
    * Добавляет копилку
    */
-  async addGoal(addSavingGoal: AddSavingGoalDto, user: User): Promise<SavingGoal> {
-    const goal = this.createGoal(addSavingGoal, user.id);
+  async addGoal(userId: number, addSavingGoal: AddSavingGoalDto): Promise<SavingGoal> {
+    this.validator.getIsRequiredFields(userId, addSavingGoal);
+
+    const goal = this.createGoal(userId, addSavingGoal);
 
     const newGoal = await this.savingsGoalRepository.save(goal);
     delete newGoal.user;
@@ -177,23 +193,21 @@ export class SavingsService {
   /**
    * Обновляет копилку
    */
-  async updateGoal(updateSavingGoal: UpdateSavingGoalDto, user: User): Promise<void> {
-    if (!updateSavingGoal.id) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+  async updateGoal(userId: number, updateSavingGoal: UpdateSavingGoalDto): Promise<void> {
+    this.validator.getIsRequiredFields(userId, updateSavingGoal?.id);
 
-    const goal = this.createGoal(updateSavingGoal, user.id);
+    const oldGoal = await this.getGoal(updateSavingGoal.id);
 
-    await this.savingsGoalRepository.update(updateSavingGoal.id, goal);
+    this.validator.getIsEqualCurrency(updateSavingGoal.currency, oldGoal.currency);
+
+    await this.savingsGoalRepository.update(updateSavingGoal.id, updateSavingGoal);
   }
 
   /**
    * Удаляет копилку
    */
   async deleteGoal(id: number) {
-    if (!id) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+    this.validator.getIsRequiredFields(id);
 
     const facts = await this.getFactsByGoalId(id);
     const plans = await this.getPlansByGoalId(id);
@@ -212,11 +226,13 @@ export class SavingsService {
   /**
    * Возвращает весь список копилок
    */
-  async getAllGoals(user: User): Promise<SavingGoal[]> {
+  async getAllGoals(userId: number): Promise<SavingGoal[]> {
+    this.validator.getIsRequiredFields(userId);
+
     return this.savingsGoalRepository.find({
       where: {
         user: {
-          id: user.id,
+          id: userId,
         },
       },
       order: {
@@ -228,8 +244,10 @@ export class SavingsService {
   /**
    * Создает план
    */
-  async addPlan(addSavingPlan: AddSavingPlanDto, user: User): Promise<Saving> {
-    const plan = this.createSaving(addSavingPlan, user.id);
+  async addPlan(userId: number, addSavingPlan: AddSavingPlanDto): Promise<Saving> {
+    this.validator.getIsRequiredFields(userId, addSavingPlan);
+
+    const plan = await this.createSaving(userId, addSavingPlan);
 
     const item = await this.savingsPlanRepository.save(plan);
     delete item.user;
@@ -240,12 +258,10 @@ export class SavingsService {
   /**
    * Обновляет план
    */
-  async updatePlan(updateSavingPlan: UpdateSavingPlanDto, user: User): Promise<void> {
-    if (!updateSavingPlan.id) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+  async updatePlan(userId: number, updateSavingPlan: UpdateSavingPlanDto): Promise<void> {
+    this.validator.getIsRequiredFields(userId, updateSavingPlan?.id);
 
-    const item = this.createSaving(updateSavingPlan, user.id);
+    const item = await this.createSaving(userId, updateSavingPlan);
 
     await this.savingsPlanRepository.update(updateSavingPlan.id, item);
   }
@@ -254,9 +270,7 @@ export class SavingsService {
    * Удаляет план
    */
   async deletePlan(id: number) {
-    if (!id) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+    this.validator.getIsRequiredFields(id);
 
     await this.savingsPlanRepository.delete(id);
   }
@@ -264,14 +278,15 @@ export class SavingsService {
   /**
    * Создает факт
    */
-  async addFact(addSavingFact: AddSavingFactDto, user: User): Promise<Saving> {
-    const fact = this.createSaving(addSavingFact, user.id);
+  async addFact(userId: number, addSavingFact: AddSavingFactDto): Promise<Saving> {
+    this.validator.getIsRequiredFields(userId, addSavingFact);
 
+    const fact = await this.createSaving(userId, addSavingFact);
     const item = await this.savingsFactRepository.save(fact);
     delete item.user;
 
     await this.changeAddValueGoal(addSavingFact.goalId, item);
-    await this.changeBalanceAdd(user.id, item);
+    await this.changeBalanceAdd(userId, item);
 
     return item;
   }
@@ -279,32 +294,27 @@ export class SavingsService {
   /**
    * Обновляет факт
    */
-  async updateFact(updateSavingFact: UpdateSavingFactDto, user: User): Promise<void> {
-    if (!updateSavingFact.id) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+  async updateFact(userId: number, updateSavingFact: UpdateSavingFactDto): Promise<void> {
+    this.validator.getIsRequiredFields(userId, updateSavingFact?.id);
 
-    const item = this.createSaving(updateSavingFact, user.id);
+    const item = await this.createSaving(userId, updateSavingFact);
     const previousItem = await this.savingsFactRepository.findOne({
       where: { id: updateSavingFact.id },
     });
 
-    if (item.actionType !== previousItem.actionType) {
-      throw new HttpException('Не возможно изменить типа факта в копилке', HttpStatus.BAD_REQUEST);
-    }
+    this.validator.getIsEqualActionSavingTypes(item.actionType, previousItem.actionType);
+    this.validator.getIsEqualCurrency(item.currency, previousItem.currency);
 
     await this.savingsFactRepository.update(updateSavingFact.id, item);
     await this.changeUpdateValueGoal(updateSavingFact.goalId, item, previousItem);
-    await this.changeBalanceUpdate(user.id, item, previousItem);
+    await this.changeBalanceUpdate(userId, item, previousItem);
   }
 
   /**
    * Удаляет факт
    */
-  async deleteFact(id: number, user: User) {
-    if (!id) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+  async deleteFact(userId: number, id: number) {
+    this.validator.getIsRequiredFields(userId, id);
 
     const previousItem = await this.savingsFactRepository.findOne({
       where: { id },
@@ -313,20 +323,18 @@ export class SavingsService {
 
     await this.savingsFactRepository.delete(id);
     await this.changeDeleteValueGoal(previousItem);
-    await this.changeBalanceDelete(user.id, previousItem);
+    await this.changeBalanceDelete(userId, previousItem);
   }
 
   /**
    * Получает список плана по дате
    */
-  getAllPlansByPeriod(start: string, end: string, userId: number): Promise<Saving[]> {
-    if (!start || !end || !userId) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+  getAllPlansByPeriod(userId: number, start: string, end: string): Promise<Saving[]> {
+    this.validator.getIsRequiredFields(userId, start, end);
 
     return this.savingsPlanRepository.find({
       where: {
-        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+        date: Between(Date.toFormat(start), Date.toFormat(end)),
         user: {
           id: userId,
         },
@@ -341,14 +349,12 @@ export class SavingsService {
   /**
    * Получает список факта по дате
    */
-  getAllFactsByPeriod(start: string, end: string, userId: number): Promise<Saving[]> {
-    if (!start || !end || !userId) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+  getAllFactsByPeriod(userId: number, start: string, end: string): Promise<Saving[]> {
+    this.validator.getIsRequiredFields(userId, start, end);
 
     return this.savingsFactRepository.find({
       where: {
-        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+        date: Between(Date.toFormat(start), Date.toFormat(end)),
         user: {
           id: userId,
         },
@@ -361,65 +367,31 @@ export class SavingsService {
   }
 
   /**
-   * Получает сумму доходов по дате
+   * Возвращает общую сумму по записям в разрезе валют
    */
-  async getPlansSumByPeriod(start: string, end: string, userId: number) {
-    if (!start || !end || !userId) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+  calculateTotalSum(items: Saving[]): CurrenciesValues {
+    return items.reduce(
+      (acc, item) => {
+        const { value, actionType, currency } = item;
 
-    const items = await this.savingsPlanRepository.find({
-      where: {
-        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
-        user: {
-          id: userId,
-        },
+        if (actionType === SAVING_ACTION_TYPE.INCOME) {
+          acc[currency] = acc[currency] !== undefined ? acc[currency] + value : value;
+        } else {
+          acc[currency] = acc[currency] !== undefined ? acc[currency] - value : -value;
+        }
+
+        return acc;
       },
-    });
-
-    return items.reduce((acc, item) => {
-      const { value, actionType } = item;
-
-      if (actionType === SAVING_ACTION_TYPE.INCOME) {
-        return acc + value;
-      } else {
-        return acc - value;
-      }
-    }, 0);
-  }
-
-  /**
-   * Получает сумму доходов по дате
-   */
-  async getFactsSumByPeriod(start: string, end: string, userId: number) {
-    if (!start || !end || !userId) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
-
-    const items = await this.savingsFactRepository.find({
-      where: {
-        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
-        user: {
-          id: userId,
-        },
-      },
-    });
-
-    return items.reduce((acc, item) => {
-      const { value, actionType } = item;
-
-      if (actionType === SAVING_ACTION_TYPE.INCOME) {
-        return acc + value;
-      } else {
-        return acc - value;
-      }
-    }, 0);
+      { [DEFAULT_CURRENCY]: 0 }
+    );
   }
 
   /**
    * Получение фактов по id копилки
    */
   getFactsByGoalId(goalId: number) {
+    this.validator.getIsRequiredFields(goalId);
+
     return this.savingsFactRepository.find({
       where: {
         goal: {
@@ -433,6 +405,8 @@ export class SavingsService {
    * Получение планов по id копилки
    */
   getPlansByGoalId(goalId: number) {
+    this.validator.getIsRequiredFields(goalId);
+
     return this.savingsPlanRepository.find({
       where: {
         goal: {

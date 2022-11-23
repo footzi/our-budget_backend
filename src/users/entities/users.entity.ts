@@ -1,5 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+import { CURRENCIES, DEFAULT_CURRENCY } from '../../currencies/currencies.constants';
 import { User } from '../interfaces/users.interface';
 import { USER_ROLES } from '../users.constants';
 
@@ -19,4 +20,7 @@ export class Users implements User {
 
   @Column('varchar', { array: true })
   roles: USER_ROLES[];
+
+  @Column('varchar', { array: true, default: [DEFAULT_CURRENCY] })
+  currencies: CURRENCIES[];
 }

@@ -27,10 +27,9 @@ export class BalanceController {
   @ApiBadRequestResponse({ type: ErrorHandler })
   async getBalance(@Request() req): Promise<GetBalanceOutputDto> {
     try {
+      const { values } = await this.balanceService.get(req.user.id);
       return {
-        balance: {
-          common: await this.balanceService.getCommon(req.user),
-        },
+        balance: values,
       };
     } catch (error) {
       errorHandler(error, this.logger, req);
@@ -44,7 +43,7 @@ export class BalanceController {
   @ApiBadRequestResponse({ type: ErrorHandler })
   async updateBalance(@Body() updateBalanceDto: UpdateBalanceDto, @Request() req): Promise<SuccessHandler> {
     try {
-      await this.balanceService.update(updateBalanceDto, req.user);
+      await this.balanceService.update(req.user.id, updateBalanceDto.value, updateBalanceDto.currency);
 
       return successHandler();
     } catch (error) {

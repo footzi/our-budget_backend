@@ -1,12 +1,12 @@
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Repository } from 'typeorm';
 import { Logger } from 'winston';
 
+import { CURRENCIES } from '../currencies/currencies.constants';
 import { Users } from '../users/entities/users.entity';
-import { User } from '../users/interfaces/users.interface';
-import { UpdateBalanceDto } from './dto/update-balance.dto';
+import { ValidatorService } from '../validator/validator.service';
 import { Balances } from './enitites/balance.entity';
 import { Balance } from './interfaces/balance.interface';
 
@@ -16,77 +16,119 @@ export class BalanceService {
     @InjectRepository(Balances)
     private balanceRepository: Repository<Balance>,
     @Inject(WINSTON_MODULE_PROVIDER)
-    private readonly logger: Logger
+    private readonly logger: Logger,
+
+    private readonly validator: ValidatorService
   ) {}
 
   /**
-   * Возвращает общий баланс
+   * Возвращает баланс с валютами
    */
-  async getCommon(user: User): Promise<number> {
-    const balance = await this.balanceRepository.findOne({
-      where: { user: { id: user.id } },
+  async get(userId: number): Promise<Balance> {
+    this.validator.getIsRequiredFields(userId);
+
+    return await this.balanceRepository.findOne({
+      where: { user: { id: userId } },
     });
-
-    if (!balance) {
-      return 0;
-    }
-
-    return balance.common;
   }
 
   /**
-   * Изменяет баланс
+   * Создает баланс
    */
-  public async changeBalance(userId: number, value: number) {
-    const current = await this.balanceRepository.findOne({
-      where: { user: { id: userId } },
-    });
+  async create(userId: number) {
+    this.validator.getIsRequiredFields(userId);
 
-    if (current) {
-      const newValue = current.common + value;
+    const balance = new Balances();
+    const user = new Users();
 
-      await this.balanceRepository.update(current.id, { common: newValue });
-    }
+    user.id = userId;
+    balance.user = user;
+    // @todo удалить столбец
+    balance.common = 0;
 
-    if (!current) {
-      const balance = new Balances();
-      const user = new Users();
+    await this.balanceRepository.save(balance);
+  }
 
-      user.id = userId;
-      balance.user = user;
-      balance.common = value;
+  /**
+   * Обновляет значение баланса
+   */
+  async update(userId: number, value: number, currency: CURRENCIES) {
+    this.validator.getIsRequiredFields(userId, value, currency);
 
-      await this.balanceRepository.save(balance);
-    }
+    const { id, values } = await this.get(userId);
+    values[currency] = value;
+
+    await this.balanceRepository.update(id, { values });
+
+    this.logger.info(`Обновление баланса у пользователя ${userId}`);
+  }
+
+  /**
+   * Прибавляет значение к текущему балансу
+   */
+  async increment(userId: number, value: number, currency: CURRENCIES) {
+    this.validator.getIsRequiredFields(userId, value, currency);
+
+    const { id, values } = await this.get(userId);
+    const currentValue = values[currency];
+
+    values[currency] = currentValue + value;
+
+    await this.balanceRepository.update(id, { values });
 
     this.logger.info(`Изменение баланса у пользователя ${userId}`);
   }
 
   /**
-   * Обновляет баланс
+   * Добавляет новую валюту к балансу
    */
-  async update(updateBalanceDto: UpdateBalanceDto, user: User): Promise<void> {
-    if (!updateBalanceDto.common) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+  async addCurrency(userId: number, currency: CURRENCIES, value = 0) {
+    this.validator.getIsRequiredFields(userId, currency, value);
 
-    const current = await this.balanceRepository.findOne({
-      where: { user: { id: user.id } },
+    const { id, values } = await this.get(userId);
+    values[currency] = value;
+
+    await this.balanceRepository.update(id, { values });
+
+    this.logger.info(`Пользователь ${userId} добавил валюту ${currency} к балансу`);
+  }
+
+  /**
+   * Удаляет значение баланса по валюте
+   */
+  async removeCurrency(userId: number, currency: CURRENCIES) {
+    this.validator.getIsRequiredFields(userId, currency);
+
+    const { id, values } = await this.get(userId);
+    delete values[currency];
+
+    await this.balanceRepository.update(id, { values });
+
+    this.logger.info(`Пользователь ${userId} удалил валюту ${currency} у баланса`);
+  }
+
+  /**
+   * Обновляет список баланса исходя из новых валют
+   */
+  async updateByCurrency(userId: number, newCurrencies: CURRENCIES[]) {
+    this.validator.getIsRequiredFields(userId, newCurrencies);
+
+    const { values } = await this.balanceRepository.findOne({
+      where: { user: { id: userId } },
     });
 
-    if (!current) {
-      const balance = new Balances();
-      const newUser = new Users();
-
-      newUser.id = user.id;
-      balance.user = newUser;
-      balance.common = updateBalanceDto.common;
-
-      await this.balanceRepository.save(balance);
+    // сначала удаляем
+    for (const value of Object.keys(values)) {
+      const currency = value as CURRENCIES;
+      if (!newCurrencies.includes(currency)) {
+        await this.removeCurrency(userId, currency);
+      }
     }
 
-    await this.balanceRepository.update({ user: { id: user.id } }, updateBalanceDto);
-
-    this.logger.info(`Обновление баланса у пользователя ${user.id}`);
+    for (const currency of newCurrencies) {
+      if (!(currency in values)) {
+        await this.addCurrency(userId, currency);
+      }
+    }
   }
 }

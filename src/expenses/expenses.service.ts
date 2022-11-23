@@ -4,9 +4,13 @@ import { Between, Repository } from 'typeorm';
 
 import { BalanceService } from '../balance/balance.service';
 import { Categories } from '../categories/entities/categories.entity';
+import { CurrenciesValues } from '../currencies/curerncies.interfaces';
+import { DEFAULT_CURRENCY } from '../currencies/currencies.constants';
+import { Date } from '../date/date.index';
 import { Income } from '../incomes/interfaces/income.interface';
 import { Users } from '../users/entities/users.entity';
 import { User } from '../users/interfaces/users.interface';
+import { ValidatorService } from '../validator/validator.service';
 import { AddExpenseFactDto } from './dto/add-expense-fact.dto';
 import { AddExpensePlanDto } from './dto/add-expense-plan.dto';
 import { UpdateExpenseFactDto } from './dto/update-expense-fact.dto';
@@ -14,9 +18,6 @@ import { UpdateExpensePlanDto } from './dto/update-expense-plan.dto';
 import { ExpensesFact } from './entities/expenses-fact.entity';
 import { ExpensesPlan } from './entities/expenses-plan.entity';
 import { Expense } from './interfaces/expense.interface';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const dayjs = require('dayjs');
 
 @Injectable()
 export class ExpensesService {
@@ -27,7 +28,9 @@ export class ExpensesService {
     @InjectRepository(ExpensesFact)
     private expensesFactRepository: Repository<Expense>,
 
-    private balanceService: BalanceService
+    private balanceService: BalanceService,
+
+    private readonly validator: ValidatorService
   ) {}
 
   /**
@@ -51,6 +54,7 @@ export class ExpensesService {
     const expense: Expense = {
       value: input.value,
       date: input.date,
+      currency: input.currency,
       comment: input.comment ?? '',
       category: category,
       user: savedUser,
@@ -63,24 +67,27 @@ export class ExpensesService {
    * Изменяет баланс при добавлении факта
    */
   private async changeBalanceAdd(userId: number, fact: Income) {
+    const { currency } = fact;
     const value = -fact.value;
-    await this.balanceService.changeBalance(userId, value);
+    await this.balanceService.increment(userId, value, currency);
   }
 
   /**
    * Изменяет баланс при обновлении факта
    */
   private async changeBalanceUpdate(userId: number, fact: Income, previousFact: Income) {
+    const { currency } = fact;
     const value = previousFact.value - Number(fact.value);
-    await this.balanceService.changeBalance(userId, value);
+    await this.balanceService.increment(userId, value, currency);
   }
 
   /**
    * Изменяет баланс при удалении факта
    */
   private async changeBalanceDelete(userId: number, previousItem: Income) {
+    const { currency } = previousItem;
     const value = previousItem.value;
-    await this.balanceService.changeBalance(userId, value);
+    await this.balanceService.increment(userId, value, currency);
   }
 
   /**
@@ -170,18 +177,15 @@ export class ExpensesService {
   /**
    * Получает список планируемых трат по дате
    */
-  getAllPlansByPeriod(start: string, end: string, userId: number): Promise<Expense[]> {
-    // @todo вынести в какой-нибудь валидатор
-    if (!start || !end) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+  getAllPlansByPeriod(userId: number, start: string, end: string): Promise<Expense[]> {
+    this.validator.getIsRequiredFields(userId, start, end);
 
     return this.expensesPlanRepository.find({
       where: {
         user: {
           id: userId,
         },
-        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+        date: Between(Date.toFormat(start), Date.toFormat(end)),
       },
       order: {
         createdAt: 'DESC',
@@ -191,59 +195,14 @@ export class ExpensesService {
   }
 
   /**
-   * Получает сумму планируемых доходов по дате
-   */
-  async getPlansSumByPeriod(start: string, end: string, userId: number) {
-    if (!start || !end || !userId) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
-
-    const items = await this.expensesPlanRepository.find({
-      where: {
-        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
-        user: {
-          id: userId,
-        },
-      },
-      select: ['value'],
-    });
-
-    return items.reduce((acc, item) => acc + item.value, 0);
-  }
-
-  /**
-   * Получает сумму фактических доходов по дате
-   */
-  async getFactsSumByPeriod(start: string, end: string, userId) {
-    if (!start || !end || !userId) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
-
-    const items = await this.expensesFactRepository.find({
-      where: {
-        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
-        user: {
-          id: userId,
-        },
-      },
-      select: ['value'],
-    });
-
-    return items.reduce((acc, item) => acc + item.value, 0);
-  }
-
-  /**
    * Получает список фактических трат по дате
    */
-  getAllFactsByPeriod(start: string, end: string, userId: number): Promise<Expense[]> {
-    // @todo вынести в какой-нибудь валидатор
-    if (!start || !end || !userId) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+  getAllFactsByPeriod(userId: number, start: string, end: string): Promise<Expense[]> {
+    this.validator.getIsRequiredFields(userId, start, end);
 
     return this.expensesFactRepository.find({
       where: {
-        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+        date: Between(Date.toFormat(start), Date.toFormat(end)),
         user: {
           id: userId,
         },
@@ -253,6 +212,21 @@ export class ExpensesService {
       },
       relations: ['category'],
     });
+  }
+
+  /**
+   * Возвращает общую сумму по записям в разрезе валют
+   */
+  calculateTotalSum(items: Expense[]): CurrenciesValues {
+    return items.reduce(
+      (acc, item) => {
+        const { currency, value } = item;
+        acc[currency] = acc[currency] ? acc[currency] + value : value;
+
+        return acc;
+      },
+      { [DEFAULT_CURRENCY]: 0 }
+    );
   }
 
   /**

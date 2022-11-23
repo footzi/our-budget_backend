@@ -1,3 +1,6 @@
+import { CURRENCIES } from '../../currencies/currencies.constants';
+
 export class UpdateBalanceDto {
-  common: number;
+  currency: CURRENCIES;
+  value: number;
 }

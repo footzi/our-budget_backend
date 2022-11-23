@@ -2,13 +2,14 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { BalanceModule } from '../balance/balance.module';
+import { ValidatorModule } from '../validator/validator.module';
 import { IncomesFact } from './entities/incomes-fact.entity';
 import { IncomesPlan } from './entities/incomes-plan.entity';
 import { IncomesController } from './incomes.controller';
 import { IncomesService } from './incomes.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([IncomesPlan, IncomesFact]), BalanceModule],
+  imports: [TypeOrmModule.forFeature([IncomesPlan, IncomesFact]), BalanceModule, ValidatorModule],
   controllers: [IncomesController],
   providers: [IncomesService],
   exports: [TypeOrmModule, IncomesService],
