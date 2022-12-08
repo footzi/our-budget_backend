@@ -1,3 +1,4 @@
+import { CURRENCIES } from '../../currencies/currencies.constants';
 import { SAVING_ACTION_TYPE } from '../savings.constants';
 
 export class AddSavingPlanDto {
@@ -6,4 +7,5 @@ export class AddSavingPlanDto {
   date: Date;
   comment?: string;
   actionType: SAVING_ACTION_TYPE;
+  currency: CURRENCIES;
 }

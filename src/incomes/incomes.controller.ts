@@ -165,15 +165,18 @@ export class IncomesController {
     @Request() req
   ): Promise<GetAllIncomesOutputDto> {
     try {
+      const plan = await this.incomesService.getAllPlansByPeriod(start, end, req.user.id);
+      const fact = await this.incomesService.getAllFactsByPeriod(start, end, req.user.id);
+
       return {
         incomes: {
           plan: {
-            list: await this.incomesService.getAllPlansByPeriod(start, end, req.user.id),
-            sum: await this.incomesService.getPlansSumByPeriod(start, end, req.user.id),
+            list: plan,
+            sum: await this.incomesService.calculateTotalSum(plan),
           },
           fact: {
-            list: await this.incomesService.getAllFactsByPeriod(start, end, req.user.id),
-            sum: await this.incomesService.getFactsSumByPeriod(start, end, req.user.id),
+            list: fact,
+            sum: await this.incomesService.calculateTotalSum(fact),
           },
         },
       };

@@ -38,7 +38,7 @@ export class SavingsController {
   async addGoal(@Body() addSavingGoal: AddSavingGoalDto, @Request() req): Promise<SavingGoalOutputDto> {
     try {
       return {
-        savingGoal: await this.savingsService.addGoal(addSavingGoal, req.user),
+        savingGoal: await this.savingsService.addGoal(req.user.id, addSavingGoal),
       };
     } catch (error) {
       errorHandler(error, this.logger, req);
@@ -52,7 +52,7 @@ export class SavingsController {
   @ApiBadRequestResponse({ type: ErrorHandler })
   async updateGoal(@Body() updateSavingGoal: UpdateSavingGoalDto, @Request() req): Promise<SuccessHandler> {
     try {
-      await this.savingsService.updateGoal(updateSavingGoal, req.user);
+      await this.savingsService.updateGoal(req.user.id, updateSavingGoal);
 
       return successHandler();
     } catch (error) {
@@ -83,7 +83,7 @@ export class SavingsController {
   async getAllGoals(@Request() req): Promise<SavingGoalsOutputDto> {
     try {
       return {
-        savingGoals: await this.savingsService.getAllGoals(req.user),
+        savingGoals: await this.savingsService.getAllGoals(req.user.id),
       };
     } catch (error) {
       errorHandler(error, this.logger, req);
@@ -98,7 +98,7 @@ export class SavingsController {
   async addPlan(@Body() addSavingPlan: AddSavingPlanDto, @Request() req): Promise<SavingOutputDto> {
     try {
       return {
-        saving: await this.savingsService.addPlan(addSavingPlan, req.user),
+        saving: await this.savingsService.addPlan(req.user.id, addSavingPlan),
       };
     } catch (error) {
       errorHandler(error, this.logger, req);
@@ -112,7 +112,7 @@ export class SavingsController {
   @ApiBadRequestResponse({ type: ErrorHandler })
   async updatePlan(@Body() updateSavingPlan: UpdateSavingPlanDto, @Request() req): Promise<SuccessHandler> {
     try {
-      await this.savingsService.updatePlan(updateSavingPlan, req.user);
+      await this.savingsService.updatePlan(req.user.id, updateSavingPlan);
       return successHandler();
     } catch (error) {
       errorHandler(error, this.logger, req);
@@ -142,7 +142,7 @@ export class SavingsController {
   async addFact(@Body() addSavingFact: AddSavingFactDto, @Request() req): Promise<SavingOutputDto> {
     try {
       return {
-        saving: await this.savingsService.addFact(addSavingFact, req.user),
+        saving: await this.savingsService.addFact(req.user.id, addSavingFact),
       };
     } catch (error) {
       errorHandler(error, this.logger, req);
@@ -156,7 +156,7 @@ export class SavingsController {
   @ApiBadRequestResponse({ type: ErrorHandler })
   async updateFact(@Body() updateSavingFact: UpdateSavingFactDto, @Request() req): Promise<SuccessHandler> {
     try {
-      await this.savingsService.updateFact(updateSavingFact, req.user);
+      await this.savingsService.updateFact(req.user.id, updateSavingFact);
       return successHandler();
     } catch (error) {
       errorHandler(error, this.logger, req);
@@ -170,7 +170,7 @@ export class SavingsController {
   @ApiBadRequestResponse({ type: ErrorHandler })
   async deleteFact(@Body() deleteSavingDto: DeleteSavingDto, @Request() req): Promise<SuccessHandler> {
     try {
-      await this.savingsService.deleteFact(deleteSavingDto.id, req.user);
+      await this.savingsService.deleteFact(req.user.id, deleteSavingDto.id);
 
       return successHandler();
     } catch (error) {
@@ -189,15 +189,18 @@ export class SavingsController {
     @Request() req
   ): Promise<GetAllSavingsOutputDto> {
     try {
+      const plan = await this.savingsService.getAllPlansByPeriod(req.user.id, start, end);
+      const fact = await this.savingsService.getAllFactsByPeriod(req.user.id, start, end);
+
       return {
         savings: {
           plan: {
-            list: await this.savingsService.getAllPlansByPeriod(start, end, req.user.id),
-            sum: await this.savingsService.getPlansSumByPeriod(start, end, req.user.id),
+            list: plan,
+            sum: this.savingsService.calculateTotalSum(plan),
           },
           fact: {
-            list: await this.savingsService.getAllFactsByPeriod(start, end, req.user.id),
-            sum: await this.savingsService.getFactsSumByPeriod(start, end, req.user.id),
+            list: fact,
+            sum: this.savingsService.calculateTotalSum(fact),
           },
         },
       };

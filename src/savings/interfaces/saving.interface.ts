@@ -1,3 +1,4 @@
+import { CURRENCIES } from '../../currencies/currencies.constants';
 import { User } from '../../users/interfaces/users.interface';
 import { SAVING_ACTION_TYPE } from '../savings.constants';
 
@@ -9,6 +10,7 @@ export class SavingGoal {
   finishValue?: number | null;
   user: User;
   createdAt?: Date;
+  currency: CURRENCIES;
 }
 
 export class Saving {
@@ -20,4 +22,5 @@ export class Saving {
   comment: string;
   date: Date;
   createdAt?: Date;
+  currency: CURRENCIES;
 }

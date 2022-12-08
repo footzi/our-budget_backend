@@ -128,7 +128,7 @@ export class ExpensesController {
   ): Promise<ExpensesOutputDto> {
     try {
       return {
-        expenses: await this.expensesService.getAllPlansByPeriod(start, end, req.user.id),
+        expenses: await this.expensesService.getAllPlansByPeriod(req.user.id, start, end),
       };
     } catch (error) {
       errorHandler(error, this.logger, req);
@@ -147,7 +147,7 @@ export class ExpensesController {
   ): Promise<ExpensesOutputDto> {
     try {
       return {
-        expenses: await this.expensesService.getAllFactsByPeriod(start, end, req.user.id),
+        expenses: await this.expensesService.getAllFactsByPeriod(req.user.id, start, end),
       };
     } catch (error) {
       errorHandler(error, this.logger, req);
@@ -165,15 +165,18 @@ export class ExpensesController {
     @Request() req
   ): Promise<GetAllExpensesOutputDto> {
     try {
+      const plan = await this.expensesService.getAllPlansByPeriod(req.user.id, start, end);
+      const fact = await this.expensesService.getAllFactsByPeriod(req.user.id, start, end);
+
       return {
         expenses: {
           plan: {
-            list: await this.expensesService.getAllPlansByPeriod(start, end, req.user.id),
-            sum: await this.expensesService.getPlansSumByPeriod(start, end, req.user.id),
+            list: plan,
+            sum: await this.expensesService.calculateTotalSum(plan),
           },
           fact: {
-            list: await this.expensesService.getAllFactsByPeriod(start, end, req.user.id),
-            sum: await this.expensesService.getFactsSumByPeriod(start, end, req.user.id),
+            list: fact,
+            sum: await this.expensesService.calculateTotalSum(fact),
           },
         },
       };

@@ -42,7 +42,7 @@ export class UsersController {
   @ApiBadRequestResponse({ type: ErrorHandler })
   async updateUser(@Body() updateUserDto: UpdateUserDto, @Request() req): Promise<SuccessHandler> {
     try {
-      await this.usersService.update(updateUserDto, req.user);
+      await this.usersService.update(req.user.id, updateUserDto);
 
       return successHandler();
     } catch (error) {

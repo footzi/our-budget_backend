@@ -2,6 +2,8 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { BalanceService } from '../balance/balance.service';
+import { DEFAULT_CURRENCY } from '../currencies/currencies.constants';
 import { Crypt } from '../utils/crypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -13,7 +15,9 @@ import { USER_ROLES } from './users.constants';
 export class UsersService {
   constructor(
     @InjectRepository(Users)
-    private usersRepository: Repository<User>
+    private usersRepository: Repository<User>,
+
+    private balanceService: BalanceService
   ) {}
 
   /**
@@ -32,9 +36,9 @@ export class UsersService {
       throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
     }
 
-    const findedUser = await this.findByLogin(createUserDTO.login);
+    const foundUser = await this.findByLogin(createUserDTO.login);
 
-    if (findedUser) {
+    if (foundUser) {
       throw new HttpException('Пользователь с данным логином уже существует', HttpStatus.BAD_REQUEST);
     }
 
@@ -44,10 +48,13 @@ export class UsersService {
       ...createUserDTO,
       roles: [USER_ROLES.USER],
       password: hashedPassword,
+      currencies: [DEFAULT_CURRENCY],
     };
 
     const newUser = await this.usersRepository.save(user);
     delete newUser.password;
+
+    await this.balanceService.create(newUser.id);
 
     return newUser;
   }
@@ -75,8 +82,26 @@ export class UsersService {
 
   /**
    * Обновляет данные пользователя
+   * @todo везде привести к такой сигнатуре
    */
-  async update(updateUserDto: UpdateUserDto, user: User): Promise<void> {
-    await this.usersRepository.update(user.id, updateUserDto);
+  async update(userId: number, updateUserDto: UpdateUserDto): Promise<void> {
+    if (!userId) {
+      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
+    }
+
+    const currentUser = await this.usersRepository.findOneBy({ id: userId });
+
+    if (!currentUser) {
+      throw new Error('Пользователь не найден');
+    }
+
+    // обновляем валюты в балансе
+    const isChangeCurrencies = JSON.stringify(updateUserDto.currencies) !== JSON.stringify(currentUser.currencies);
+
+    if (isChangeCurrencies) {
+      await this.balanceService.updateByCurrency(userId, updateUserDto.currencies);
+    }
+
+    await this.usersRepository.update(userId, updateUserDto);
   }
 }

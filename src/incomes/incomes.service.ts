@@ -4,8 +4,12 @@ import { Between, Repository } from 'typeorm';
 
 import { BalanceService } from '../balance/balance.service';
 import { Categories } from '../categories/entities/categories.entity';
+import { CurrenciesValues } from '../currencies/curerncies.interfaces';
+import { DEFAULT_CURRENCY } from '../currencies/currencies.constants';
+import { Date } from '../date/date.index';
 import { Users } from '../users/entities/users.entity';
 import { User } from '../users/interfaces/users.interface';
+import { ValidatorService } from '../validator/validator.service';
 import { AddIncomeFactDto } from './dto/add-income-fact.dto';
 import { AddIncomePlanDto } from './dto/add-income-plan.dto';
 import { UpdateIncomeFactDto } from './dto/update-income-fact.dto';
@@ -13,9 +17,6 @@ import { UpdateIncomePlanDto } from './dto/update-income-plan.dto';
 import { IncomesFact } from './entities/incomes-fact.entity';
 import { IncomesPlan } from './entities/incomes-plan.entity';
 import { Income } from './interfaces/income.interface';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const dayjs = require('dayjs');
 
 @Injectable()
 export class IncomesService {
@@ -26,7 +27,9 @@ export class IncomesService {
     @InjectRepository(IncomesFact)
     private incomeFactRepository: Repository<Income>,
 
-    private balanceService: BalanceService
+    private balanceService: BalanceService,
+
+    private readonly validator: ValidatorService
   ) {}
 
   /**
@@ -51,6 +54,7 @@ export class IncomesService {
       value: input.value,
       date: input.date,
       comment: input.comment ?? '',
+      currency: input.currency,
       category: category,
       user: savedUser,
     };
@@ -62,24 +66,26 @@ export class IncomesService {
    * Изменяет баланс при добавлении факта
    */
   private async changeBalanceAdd(userId: number, fact: Income) {
-    const value = fact.value;
-    await this.balanceService.changeBalance(userId, value);
+    const { value, currency } = fact;
+    await this.balanceService.increment(userId, value, currency);
   }
 
   /**
    * Изменяет баланс при обновлении факта
    */
   private async changeBalanceUpdate(userId: number, fact: Income, previousFact: Income) {
+    const { currency } = fact;
     const value = Number(fact.value) - previousFact.value;
-    await this.balanceService.changeBalance(userId, value);
+    await this.balanceService.increment(userId, value, currency);
   }
 
   /**
    * Изменяет баланс при удалении факта
    */
   private async changeBalanceDelete(userId: number, previousItem: Income) {
+    const { currency } = previousItem;
     const value = -previousItem.value;
-    await this.balanceService.changeBalance(userId, value);
+    await this.balanceService.increment(userId, value, currency);
   }
 
   /**
@@ -170,14 +176,11 @@ export class IncomesService {
    * Получает список планируемых доходов по дате
    */
   getAllPlansByPeriod(start: string, end: string, userId): Promise<Income[]> {
-    // @todo вынести в какой-нибудь валидатор
-    if (!start || !end || !userId) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+    this.validator.getIsRequiredFields(userId, start, end);
 
     return this.incomePlanRepository.find({
       where: {
-        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+        date: Between(Date.toFormat(start), Date.toFormat(end)),
         user: {
           id: userId,
         },
@@ -190,62 +193,14 @@ export class IncomesService {
   }
 
   /**
-   * Получает cумму планируемых доходов по дате
-   */
-  async getPlansSumByPeriod(start: string, end: string, userId: number) {
-    if (!start || !end || !userId) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
-
-    const items = await this.incomePlanRepository.find({
-      where: {
-        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
-        user: {
-          id: userId,
-        },
-      },
-      select: ['value'],
-    });
-
-    return items.reduce((acc, item) => acc + item.value, 0);
-  }
-
-  /**
-   * Получает сумму фактических доходов по дате
-   */
-  async getFactsSumByPeriod(start: string, end: string, userId: number) {
-    if (!start || !end || !userId) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
-
-    const items = await this.incomeFactRepository.find({
-      where: {
-        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
-        user: {
-          id: userId,
-        },
-      },
-      order: {
-        createdAt: 'DESC',
-      },
-      select: ['value'],
-    });
-
-    return items.reduce((acc, item) => acc + item.value, 0);
-  }
-
-  /**
-   * Получает спискок фактических доходов по дате
+   * Получает список фактических доходов по дате
    */
   getAllFactsByPeriod(start: string, end: string, userId: number): Promise<Income[]> {
-    // @todo вынести в какой-нибудь валидатор
-    if (!start || !end || !userId) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+    this.validator.getIsRequiredFields(userId, start, end);
 
     return this.incomeFactRepository.find({
       where: {
-        date: Between(dayjs(start).toISOString(), dayjs(end).toISOString()),
+        date: Between(Date.toFormat(start), Date.toFormat(end)),
         user: {
           id: userId,
         },
@@ -255,6 +210,21 @@ export class IncomesService {
       },
       relations: ['category'],
     });
+  }
+
+  /**
+   * Возвращает общую сумму по записям в разрезе валют
+   */
+  calculateTotalSum(items: Income[]): CurrenciesValues {
+    return items.reduce(
+      (acc, item) => {
+        const { currency, value } = item;
+        acc[currency] = acc[currency] ? acc[currency] + value : value;
+
+        return acc;
+      },
+      { [DEFAULT_CURRENCY]: 0 }
+    );
   }
 
   /**

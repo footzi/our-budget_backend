@@ -1,5 +1,5 @@
+import { CurrenciesValues } from '../../currencies/curerncies.interfaces';
+
 export class GetBalanceOutputDto {
-  balance: {
-    common: number;
-  };
+  balance: CurrenciesValues;
 }
