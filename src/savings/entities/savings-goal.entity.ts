@@ -29,6 +29,9 @@ export class SavingsGoal implements SavingGoal {
   @JoinColumn()
   user: Users;
 
+  @Column('int', { default: 0 })
+  order: number;
+
   @CreateDateColumn()
   createdAt: Date;
 }

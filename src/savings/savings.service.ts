@@ -90,6 +90,7 @@ export class SavingsService {
       description: input.description ?? '',
       finishValue: input.finishValue ?? null,
       value: input.value ?? 0,
+      order: 0,
       user,
     };
   }

@@ -11,6 +11,7 @@ export class SavingGoal {
   user: User;
   createdAt?: Date;
   currency: CURRENCIES;
+  order: number;
 }
 
 export class Saving {
