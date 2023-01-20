@@ -71,8 +71,9 @@ export class BalanceService {
 
     const { id, values } = await this.get(userId);
     const currentValue = values[currency];
+    const sum = currentValue + value;
 
-    values[currency] = currentValue + value;
+    values[currency] = Number(sum.toFixed(2));
 
     await this.balanceRepository.update(id, { values });
 
