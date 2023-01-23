@@ -8,6 +8,7 @@ import { User } from '../users/interfaces/users.interface';
 import { UsersService } from '../users/users.service';
 import { Crypt } from '../utils/crypt';
 import { GenerateRandom } from '../utils/generateRandom';
+import { ValidatorService } from '../validator/validator.service';
 import { SignUpDto } from './dto/signup.dto';
 import { Auths } from './entitites/auth.entity';
 import { Auth, Tokens } from './interfaces/auth.interface';
@@ -19,7 +20,8 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     @InjectRepository(Auths)
-    private authRepository: Repository<Auths>
+    private authRepository: Repository<Auths>,
+    private validator: ValidatorService
   ) {}
 
   /**
@@ -86,9 +88,13 @@ export class AuthService {
   }
 
   async signUp(signUpDto: SignUpDto): Promise<{ user: User; tokens: Tokens } | null> {
-    if (!signUpDto.login || !signUpDto.password || !signUpDto.password2 || !signUpDto.firstName) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+    this.validator.getIsRequiredFields(
+      signUpDto?.login,
+      signUpDto?.password,
+      signUpDto?.password2,
+      signUpDto?.firstName,
+      signUpDto?.agreements
+    );
 
     if (signUpDto.password !== signUpDto.password2) {
       throw new HttpException('Пароли не совпадают', HttpStatus.BAD_REQUEST);

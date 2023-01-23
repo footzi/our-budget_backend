@@ -39,7 +39,7 @@ export class UsersService {
     const foundUser = await this.findByLogin(createUserDTO.login);
 
     if (foundUser) {
-      throw new HttpException('Пользователь с данным логином уже существует', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Пользователь с данным e-mail уже существует', HttpStatus.BAD_REQUEST);
     }
 
     const hashedPassword = createUserDTO.password ? await Crypt.hash(createUserDTO.password) : '';

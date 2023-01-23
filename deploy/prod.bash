@@ -1,5 +1,5 @@
 #!/bin/bash
-source ../.env
+source .env
 
 ssh -p $DEPLOY_PORT $DEPLOY_URL "
   cd $DEPLOY_FOLDER &&

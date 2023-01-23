@@ -6,6 +6,7 @@ export class SignUpDto {
   firstName: string;
   password: string;
   password2: string;
+  agreements: boolean;
 }
 
 export class SignUpOutDto {

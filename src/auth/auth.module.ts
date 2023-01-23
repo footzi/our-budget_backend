@@ -5,6 +5,7 @@ import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { UsersModule } from '../users/users.module';
+import { ValidatorModule } from '../validator/validator.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { Auths } from './entitites/auth.entity';
@@ -25,6 +26,7 @@ import { LocalStrategy } from './local.strategy';
       }),
       inject: [ConfigService],
     }),
+    ValidatorModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy, JwtStrategy, RolesGuard, JwtRefreshStrategy],
