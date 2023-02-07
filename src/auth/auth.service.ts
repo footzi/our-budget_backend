@@ -96,9 +96,9 @@ export class AuthService {
       signUpDto?.agreements
     );
 
-    if (signUpDto.password !== signUpDto.password2) {
-      throw new HttpException('Пароли не совпадают', HttpStatus.BAD_REQUEST);
-    }
+    this.validator.getIsValidEmail(signUpDto.login);
+    this.validator.getIsValidPasswordLength(signUpDto.password);
+    this.validator.getIsEqualPasswords(signUpDto.password, signUpDto.password2);
 
     const user = await this.usersService.create(signUpDto);
 

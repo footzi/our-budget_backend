@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 import { CURRENCIES, DEFAULT_CURRENCY } from '../../currencies/currencies.constants';
 import { User } from '../interfaces/users.interface';
@@ -23,4 +23,7 @@ export class Users implements User {
 
   @Column('varchar', { array: true, default: [DEFAULT_CURRENCY] })
   currencies: CURRENCIES[];
+
+  @CreateDateColumn()
+  createdAt: Date;
 }
