@@ -5,6 +5,9 @@ import { Repository } from 'typeorm';
 import { BalanceService } from '../balance/balance.service';
 import { DEFAULT_CURRENCY } from '../currencies/currencies.constants';
 import { Crypt } from '../utils/crypt';
+import { GenerateRandom } from '../utils/generateRandom';
+import { ValidatorService } from '../validator/validator.service';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Users } from './entities/users.entity';
@@ -17,7 +20,8 @@ export class UsersService {
     @InjectRepository(Users)
     private usersRepository: Repository<User>,
 
-    private balanceService: BalanceService
+    private balanceService: BalanceService,
+    private validator: ValidatorService
   ) {}
 
   /**
@@ -32,9 +36,7 @@ export class UsersService {
    * Создание нового пользователя
    */
   async create(createUserDTO: CreateUserDto): Promise<User> {
-    if (!createUserDTO.login || !createUserDTO.password || !createUserDTO.firstName) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+    this.validator.getIsRequiredFields(createUserDTO.login, createUserDTO.password, createUserDTO.firstName);
 
     const foundUser = await this.findByLogin(createUserDTO.login);
 
@@ -64,9 +66,7 @@ export class UsersService {
    * @param id
    */
   async getById(id: number): Promise<User> {
-    if (!id) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+    this.validator.getIsRequiredFields(id);
 
     const user = await this.usersRepository.findOneBy({ id });
 
@@ -81,13 +81,27 @@ export class UsersService {
   }
 
   /**
+   * Возвращает пользователя
+   */
+  async getByLogin(login: string): Promise<User | null> {
+    const user = await this.usersRepository.findOneBy({ login });
+
+    if (!user) {
+      return null;
+    }
+
+    delete user.password;
+    delete user.roles;
+
+    return user;
+  }
+
+  /**
    * Обновляет данные пользователя
    * @todo везде привести к такой сигнатуре
    */
   async update(userId: number, updateUserDto: UpdateUserDto): Promise<void> {
-    if (!userId) {
-      throw new HttpException('Переданы не все обязательные поля', HttpStatus.BAD_REQUEST);
-    }
+    this.validator.getIsRequiredFields(userId);
 
     const currentUser = await this.usersRepository.findOneBy({ id: userId });
 
@@ -103,5 +117,54 @@ export class UsersService {
     }
 
     await this.usersRepository.update(userId, updateUserDto);
+  }
+
+  /**
+   * Cброс пароля
+   */
+  async resetPassword(login: string): Promise<string> {
+    this.validator.getIsRequiredFields(login);
+
+    const user = await this.getByLogin(login);
+
+    if (!user) {
+      throw new Error('Пользователь не найден');
+    }
+
+    const generatedPassword = GenerateRandom.string(5);
+    const password = await Crypt.hash(generatedPassword);
+
+    await this.usersRepository.update(user.id, { password });
+
+    return generatedPassword;
+  }
+
+  /**
+   * Смена пароля
+   */
+  async changePassword(userId: number, changePasswordDto: ChangePasswordDto): Promise<void> {
+    this.validator.getIsRequiredFields(
+      userId,
+      changePasswordDto.oldPassword,
+      changePasswordDto.newPassword,
+      changePasswordDto.newPassword2
+    );
+    this.validator.getIsEqualPasswords(changePasswordDto.newPassword, changePasswordDto.newPassword2);
+    this.validator.getIsValidPasswordLength(changePasswordDto.newPassword);
+
+    const user = await this.usersRepository.findOneBy({ id: userId });
+
+    if (!user) {
+      throw new Error('Пользователь не найден');
+    }
+
+    const isPasswordEqual = await Crypt.compare(changePasswordDto.oldPassword, user.password);
+    const hashedPassword = await Crypt.hash(changePasswordDto.newPassword);
+
+    if (!isPasswordEqual) {
+      throw new Error('Пароли не совпадают');
+    }
+
+    await this.usersRepository.update(user.id, { password: hashedPassword });
   }
 }

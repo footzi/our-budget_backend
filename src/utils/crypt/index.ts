@@ -14,11 +14,8 @@ export class Crypt {
 
   /**
    * Сравнение двух строк
-   *
-   * @param {string} a - 1 строка
-   * @param {string} b - 2 строка
    */
-  static async compare(a: string, b: string): Promise<boolean> {
-    return await bcrypt.compare(a, b);
+  static async compare(plaintText: string, hash: string): Promise<boolean> {
+    return await bcrypt.compare(plaintText, hash);
   }
 }

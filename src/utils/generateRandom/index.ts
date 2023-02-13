@@ -5,7 +5,7 @@ export class GenerateRandom {
   /**
    * Генерация случайной строки
    */
-  static string(): string {
-    return randomstring.generate();
+  static string(len?: number): string {
+    return randomstring.generate(len);
   }
 }
