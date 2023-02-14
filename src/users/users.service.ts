@@ -162,7 +162,7 @@ export class UsersService {
     const hashedPassword = await Crypt.hash(changePasswordDto.newPassword);
 
     if (!isPasswordEqual) {
-      throw new Error('Пароли не совпадают');
+      throw new Error('Пароль неверный');
     }
 
     await this.usersRepository.update(user.id, { password: hashedPassword });
