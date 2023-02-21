@@ -8,7 +8,7 @@
 - swagger - http://localhost:8888/swagger/
 
 ## Prod
-- docker-compose up postgres - Запуск БД
+- docker-compose up postgres -d - Запуск БД
 - yarn build - Cборка приложения
 - yarn start:pm2 - Cтарт приложения
 - yarn stop:pm2 - Остановка приложения
