@@ -63,8 +63,8 @@ export class UsersController {
     try {
       return {
         // @todo пока нет нормальной реализации сброса пароля
-        // hash: await this.usersService.resetPassword(resetPasswordDto.login),
-        hash: '0',
+        hash: await this.usersService.resetPassword(resetPasswordDto.login),
+        // hash: '0',
       };
     } catch (error) {
       errorHandler(error, this.logger, req);
