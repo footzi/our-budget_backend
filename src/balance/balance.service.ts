@@ -7,14 +7,20 @@ import { Logger } from 'winston';
 import { CURRENCIES } from '../currencies/currencies.constants';
 import { Users } from '../users/entities/users.entity';
 import { ValidatorService } from '../validator/validator.service';
+import { BALANCE_ACTIONS } from './balances.constants';
+import { BalanceHistories } from './enitites/balance-history.entity';
 import { Balances } from './enitites/balance.entity';
-import { Balance } from './interfaces/balance.interface';
+import { Balance, BalanceHistory } from './interfaces/balance.interface';
 
 @Injectable()
 export class BalanceService {
   constructor(
     @InjectRepository(Balances)
     private balanceRepository: Repository<Balance>,
+
+    @InjectRepository(BalanceHistories)
+    private balanceHistoriesRepository: Repository<BalanceHistory>,
+
     @Inject(WINSTON_MODULE_PROVIDER)
     private readonly logger: Logger,
 
@@ -56,10 +62,13 @@ export class BalanceService {
     this.validator.getIsRequiredFields(userId, value, currency);
 
     const { id, values } = await this.get(userId);
+    const oldValue = values[currency];
+
     values[currency] = value;
 
     await this.balanceRepository.update(id, { values });
 
+    this.writeHistory(userId, BALANCE_ACTIONS.MANUAL, currency, oldValue, value);
     this.logger.info(`Обновление баланса у пользователя ${userId}`);
   }
 
@@ -76,6 +85,9 @@ export class BalanceService {
     values[currency] = Number(sum.toFixed(2));
 
     await this.balanceRepository.update(id, { values });
+
+    const historyAction = value > 0 ? BALANCE_ACTIONS.INCREMENT : BALANCE_ACTIONS.DECREMENT;
+    this.writeHistory(userId, historyAction, currency, currentValue, sum);
 
     this.logger.info(`Изменение баланса у пользователя ${userId}`);
   }
@@ -131,5 +143,34 @@ export class BalanceService {
         await this.addCurrency(userId, currency);
       }
     }
+  }
+
+  /**
+   * Записывает историю изменения баланса
+   */
+  writeHistory(userId: number, action: BALANCE_ACTIONS, currency: CURRENCIES, oldValue: number, newValue: number) {
+    const history = new BalanceHistory();
+    const user = new Users();
+
+    user.id = userId;
+
+    history.user = user;
+    history.action = action;
+    history.currency = currency;
+    history.oldValue = oldValue;
+    history.newValue = newValue;
+
+    this.balanceHistoriesRepository.save(history);
+  }
+
+  /**
+   * Получает историю изменения баланса
+   */
+  async getHistory(userId: number): Promise<BalanceHistory[]> {
+    this.validator.getIsRequiredFields(userId);
+
+    return await this.balanceHistoriesRepository.find({
+      where: { user: { id: userId } },
+    });
   }
 }

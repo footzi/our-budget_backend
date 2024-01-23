@@ -9,6 +9,7 @@ import { ErrorHandler } from '../utils/errorHandler/interfaces';
 import { successHandler } from '../utils/successHandler';
 import { SuccessHandler } from '../utils/successHandler/interfaces';
 import { BalanceService } from './balance.service';
+import { GetBalanceHistoryOutputDto } from './dto/balance-history-output.dto';
 import { GetBalanceOutputDto } from './dto/get-balance-output.dto';
 import { UpdateBalanceDto } from './dto/update-balance.dto';
 
@@ -46,6 +47,23 @@ export class BalanceController {
       await this.balanceService.update(req.user.id, updateBalanceDto.value, updateBalanceDto.currency);
 
       return successHandler();
+    } catch (error) {
+      errorHandler(error, this.logger, req);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/history')
+  @HttpCode(200)
+  @ApiOkResponse({ type: GetBalanceHistoryOutputDto })
+  @ApiBadRequestResponse({ type: ErrorHandler })
+  async getBalanceHistories(@Request() req): Promise<GetBalanceHistoryOutputDto> {
+    try {
+      const history = await this.balanceService.getHistory(req.user.id);
+
+      return {
+        history,
+      };
     } catch (error) {
       errorHandler(error, this.logger, req);
     }

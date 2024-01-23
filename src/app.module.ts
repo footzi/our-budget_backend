@@ -9,6 +9,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { Auths } from './auth/entitites/auth.entity';
 import { BalanceModule } from './balance/balance.module';
+import { BalanceHistories } from './balance/enitites/balance-history.entity';
 import { Balances } from './balance/enitites/balance.entity';
 import { CategoriesModule } from './categories/categories.module';
 import { Categories } from './categories/entities/categories.entity';
@@ -56,6 +57,7 @@ const path = require('path');
           SavingsFact,
           SavingsGoal,
           Balances,
+          BalanceHistories,
         ],
       }),
       inject: [ConfigService],
