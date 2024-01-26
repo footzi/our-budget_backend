@@ -5,8 +5,8 @@ ssh -p $DEPLOY_PORT $DEPLOY_URL "
   cd $DEPLOY_FOLDER &&
   git reset --hard origin/master &&
   git pull &&
-  yarn &&
-  yarn build &&
-  yarn stop:pm2 &&
-  yarn start:pm2
+  npm ci &&
+  npm run build &&
+  npm run stop:pm2 &&
+  npm run start:pm2
 "
