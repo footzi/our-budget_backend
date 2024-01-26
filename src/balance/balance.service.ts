@@ -171,6 +171,9 @@ export class BalanceService {
 
     return await this.balanceHistoriesRepository.find({
       where: { user: { id: userId } },
+      order: {
+        createdAt: 'DESC',
+      },
     });
   }
 }
