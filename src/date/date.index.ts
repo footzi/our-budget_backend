@@ -1,6 +1,5 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const dayjs = require('dayjs');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const utc = require('dayjs/plugin/utc');
 
 dayjs.extend(utc);

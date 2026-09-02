@@ -190,7 +190,7 @@ export class ExpensesService {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['category'],
+      relations: { category: true },
     });
   }
 
@@ -210,7 +210,7 @@ export class ExpensesService {
       order: {
         date: 'DESC',
       },
-      relations: ['category'],
+      relations: { category: true },
     });
   }
 

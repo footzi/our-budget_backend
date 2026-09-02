@@ -10,7 +10,10 @@ import { UserJWTPayload } from './interfaces/auth.interface';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refreshtoken') {
-  constructor(private authService: AuthService, private configService: ConfigService) {
+  constructor(
+    private authService: AuthService,
+    private configService: ConfigService
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,

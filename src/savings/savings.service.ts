@@ -319,7 +319,7 @@ export class SavingsService {
 
     const previousItem = await this.savingsFactRepository.findOne({
       where: { id },
-      relations: ['goal'],
+      relations: { goal: true },
     });
 
     await this.savingsFactRepository.delete(id);
@@ -343,7 +343,7 @@ export class SavingsService {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['goal'],
+      relations: { goal: true },
     });
   }
 
@@ -363,7 +363,7 @@ export class SavingsService {
       order: {
         date: 'DESC',
       },
-      relations: ['goal'],
+      relations: { goal: true },
     });
   }
 

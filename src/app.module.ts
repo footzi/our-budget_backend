@@ -4,8 +4,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { WinstonModule } from 'nest-winston';
 import { format, transports } from 'winston';
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { Auths } from './auth/entitites/auth.entity';
 import { BalanceModule } from './balance/balance.module';
@@ -14,9 +12,11 @@ import { Balances } from './balance/enitites/balance.entity';
 import { CategoriesModule } from './categories/categories.module';
 import { Categories } from './categories/entities/categories.entity';
 import configuration from './config';
+import { SERVICE_NAME } from './constants';
 import { ExpensesFact } from './expenses/entities/expenses-fact.entity';
 import { ExpensesPlan } from './expenses/entities/expenses-plan.entity';
 import { ExpensesModule } from './expenses/expenses.module';
+import { HealthController } from './health/health.controller';
 import { IncomesFact } from './incomes/entities/incomes-fact.entity';
 import { IncomesPlan } from './incomes/entities/incomes-plan.entity';
 import { IncomesModule } from './incomes/incomes.module';
@@ -26,7 +26,6 @@ import { SavingsPlan } from './savings/entities/savings-plan.entity';
 import { SavingsModule } from './savings/savings.module';
 import { Users } from './users/entities/users.entity';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require('path');
 
 @Module({
@@ -63,8 +62,10 @@ const path = require('path');
       inject: [ConfigService],
     }),
     WinstonModule.forRoot({
+      defaultMeta: { service: SERVICE_NAME },
       format: format.combine(format.timestamp(), format.json(), format.prettyPrint()),
       transports: [
+        new transports.Console(),
         new transports.File({
           filename: path.join(__dirname, '../logs/error.log'),
           level: 'error',
@@ -74,7 +75,6 @@ const path = require('path');
       ],
     }),
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [HealthController],
 })
 export class AppModule {}

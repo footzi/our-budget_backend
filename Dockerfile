@@ -1,33 +1,37 @@
-FROM node:16-alpine AS development
+FROM node:24-alpine AS builder
 
-RUN apk update && apk upgrade && apk add python3 && apk add make && apk add g++
+# bcrypt — нативный модуль, на alpine собирается из исходников
+RUN apk add --no-cache python3 make g++
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY tsconfig.json tsconfig.build.json nest-cli.json ./
+COPY src ./src
+
+RUN npm run build && npm prune --omit=dev
+
+FROM node:24-alpine
+
+ENV NODE_ENV=production
+ENV PORT=3000
+
+WORKDIR /app
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY package.json ./
+
+# winston пишет файлы в ./logs, каталог должен принадлежать пользователю node
+RUN mkdir -p /app/logs && chown -R node:node /app/logs
 
 USER node
 
-WORKDIR /usr/src/app
+EXPOSE 3000
 
-COPY --chown=node:node package*.json ./
-COPY --chown=node:node yarn.lock ./
-
-RUN yarn install
-
-COPY --chown=node:node . .
-
-#RUN npm run build
-
-FROM node:16-alpine as production
-
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
-
-WORKDIR /usr/src/app
-
-COPY package*.json ./
-
-RUN npm install --only=production
-
-COPY . .
-
-COPY --from=development /usr/src/app/dist ./dist
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/health-check').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 CMD ["node", "dist/main"]

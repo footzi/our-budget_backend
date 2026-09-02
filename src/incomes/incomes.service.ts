@@ -188,7 +188,7 @@ export class IncomesService {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['category'],
+      relations: { category: true },
     });
   }
 
@@ -208,7 +208,7 @@ export class IncomesService {
       order: {
         date: 'DESC',
       },
-      relations: ['category'],
+      relations: { category: true },
     });
   }
 
