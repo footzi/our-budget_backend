@@ -1,3 +1,20 @@
+const buildDatabaseConfig = () => {
+  const common = { type: 'postgres', synchronize: true };
+
+  if (process.env.DATABASE_URL) {
+    return { ...common, url: process.env.DATABASE_URL };
+  }
+
+  return {
+    ...common,
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT, 10) || 5432,
+    username: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
+  };
+};
+
 export default () => {
   return {
     port: parseInt(process.env.PORT, 10) || 3000,
@@ -10,14 +27,6 @@ export default () => {
       expiresIn: process.env.JWT_EXPIRES_IN,
       refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
     },
-    database: {
-      type: 'postgres',
-      synchronize: true,
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT, 10),
-      username: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
-    },
+    database: buildDatabaseConfig(),
   };
 };
