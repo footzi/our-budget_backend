@@ -3,6 +3,16 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from './app.module';
 import config from './config';
+import { SERVICE_NAME } from './constants';
+
+process.on('unhandledRejection', (reason) => {
+  console.error(`[${SERVICE_NAME}] необработанная ошибка в промисе:`, reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error(`[${SERVICE_NAME}] необработанное исключение:`, error);
+  process.exit(1);
+});
 
 async function bootstrap() {
   const { port, useCors, corsOrigin } = config();

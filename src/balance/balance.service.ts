@@ -4,6 +4,7 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Repository } from 'typeorm';
 import { Logger } from 'winston';
 
+import { SERVICE_NAME } from '../constants';
 import { CURRENCIES } from '../currencies/currencies.constants';
 import { Users } from '../users/entities/users.entity';
 import { ValidatorService } from '../validator/validator.service';
@@ -68,7 +69,7 @@ export class BalanceService {
 
     await this.balanceRepository.update(id, { values });
 
-    this.writeHistory(userId, BALANCE_ACTIONS.MANUAL, currency, oldValue, value);
+    await this.writeHistory(userId, BALANCE_ACTIONS.MANUAL, currency, oldValue, value);
     this.logger.info(`Обновление баланса у пользователя ${userId}`);
   }
 
@@ -87,7 +88,7 @@ export class BalanceService {
     await this.balanceRepository.update(id, { values });
 
     const historyAction = value > 0 ? BALANCE_ACTIONS.INCREMENT : BALANCE_ACTIONS.DECREMENT;
-    this.writeHistory(userId, historyAction, currency, currentValue, sum);
+    await this.writeHistory(userId, historyAction, currency, currentValue, sum);
 
     this.logger.info(`Изменение баланса у пользователя ${userId}`);
   }
@@ -148,7 +149,13 @@ export class BalanceService {
   /**
    * Записывает историю изменения баланса
    */
-  writeHistory(userId: number, action: BALANCE_ACTIONS, currency: CURRENCIES, oldValue: number, newValue: number) {
+  async writeHistory(
+    userId: number,
+    action: BALANCE_ACTIONS,
+    currency: CURRENCIES,
+    oldValue: number,
+    newValue: number
+  ): Promise<void> {
     const history = new BalanceHistory();
     const user = new Users();
 
@@ -160,7 +167,11 @@ export class BalanceService {
     history.oldValue = oldValue;
     history.newValue = newValue;
 
-    this.balanceHistoriesRepository.save(history);
+    try {
+      await this.balanceHistoriesRepository.save(history);
+    } catch (error) {
+      this.logger.error(`[${SERVICE_NAME}] не удалось записать историю баланса: ${error.message}`);
+    }
   }
 
   /**
